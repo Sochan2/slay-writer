@@ -66,7 +66,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Invalid request body." }, { status: 400 });
     }
 
-    const { topic, experience, message, audience } = body as Record<string, unknown>;
+    const { topic, experience, message, audience, numbers, frustration, postGoal } = body as Record<string, unknown>;
 
     // Presence check
     for (const field of REQUIRED_FIELDS) {
@@ -101,16 +101,53 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    // Validate optional fields (if provided)
+    const optionalStringFields = { numbers, frustration };
+    for (const [key, value] of Object.entries(optionalStringFields)) {
+      if (value !== undefined && value !== "") {
+        if (typeof value !== "string") {
+          return NextResponse.json(
+            { error: `Field "${key}" must be a string.` },
+            { status: 400 }
+          );
+        }
+        if (value.length > MAX_FIELD_LENGTH) {
+          return NextResponse.json(
+            { error: `Field "${key}" exceeds the 1000 character limit.` },
+            { status: 400 }
+          );
+        }
+      }
+    }
+
+    const VALID_GOALS = ["Get comments", "Get followers", "Get DMs", "Get saves"];
+    if (postGoal && (typeof postGoal !== "string" || !VALID_GOALS.includes(postGoal))) {
+      return NextResponse.json({ error: "Invalid postGoal value." }, { status: 400 });
+    }
+
+    // Build optional prompt context
+    const optionalLines: string[] = [];
+    if (numbers && typeof numbers === "string" && numbers.trim()) {
+      optionalLines.push(`- Specific Numbers or Results: ${numbers.trim()}`);
+    }
+    if (frustration && typeof frustration === "string" && frustration.trim()) {
+      optionalLines.push(`- What Frustrated/Surprised Them: ${frustration.trim()}`);
+    }
+    if (postGoal && typeof postGoal === "string") {
+      optionalLines.push(`- Post Goal: ${postGoal} (optimise hook and CTA for this outcome)`);
+    }
+    const optionalContext = optionalLines.length ? "\n" + optionalLines.join("\n") : "";
+
     // Initialise client — throws a clear error if API key is missing/invalid
     const client = getAnthropicClient();
 
     const prompt = `You are an expert LinkedIn content strategist who writes viral posts using the SLAY Framework.
 
 SLAY Framework:
-- S = Strong Hook (first 2 lines stop the scroll — bold claim, surprising stat, or provocative question)
+- S = Strong Hook + Rehook (first 3 lines: line 1-2 = bold controversial statement or contrarian opinion that challenges a common belief; line 3 = a "rehook" sentence that makes the reader NEED to keep reading, e.g. "Here's what no one tells you." / "Most people get this completely wrong.")
 - L = Lesson or Insight (the key takeaway — clear and punchy)
 - A = Action or Story (back it up with a real example or specific moment)
-- Y = Your CTA (end with a subtle, non-pushy call to action)
+- Y = Your CTA (a specific question that invites comments — never generic)
 
 Writing rules (strictly enforce all):
 - Max 15 words per sentence
@@ -119,12 +156,15 @@ Writing rules (strictly enforce all):
 - First 2 lines must be magnetic — they show before "see more"
 - Conversational, direct, human voice
 - Preserve line breaks with \\n\\n between paragraphs and \\n for single line breaks within a block
+- Opening hook MUST be controversial or challenge a widely-held belief — a genuine strong opinion, not clickbait
+- Line 3 MUST be a rehook: a short, punchy sentence that makes readers feel they'll miss something if they stop
+- CTA MUST be a specific, concrete question about the topic (e.g. "What's your biggest struggle with X? Tell me below 👇") — NEVER use generic CTAs like "Who else feels this?" or "Drop a 🔥 if you agree"
 
 User inputs:
 - Topic: ${(topic as string).trim()}
 - Personal Experience: ${(experience as string).trim()}
 - Main Message: ${(message as string).trim()}
-- Target Audience: ${(audience as string).trim()}
+- Target Audience: ${(audience as string).trim()}${optionalContext}
 
 Generate exactly TWO LinkedIn posts and return ONLY this JSON (no markdown, no extra text):
 
@@ -148,10 +188,11 @@ relatablePost rules:
 Both posts must:
 1. Follow SLAY Framework exactly
 2. Be 180-280 words
-3. Hook strongly in the first 2 lines
-4. Use \\n\\n between paragraph blocks
-5. End with a subtle, genuine CTA (not salesy)
-6. Be LinkedIn-ready — copy-paste quality
+3. Open with a bold, controversial or contrarian statement in lines 1-2
+4. Line 3 is a rehook — a short sentence that compels the reader past "see more"
+5. Use \\n\\n between paragraph blocks
+6. End with a specific question CTA that invites real replies (not a generic prompt)
+7. Be LinkedIn-ready — copy-paste quality
 
 Return ONLY the raw JSON object.`;
 

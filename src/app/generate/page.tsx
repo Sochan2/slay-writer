@@ -9,6 +9,9 @@ interface FormData {
   experience: string;
   message: string;
   audience: string;
+  numbers: string;
+  frustration: string;
+  postGoal: string;
 }
 
 interface GenerateResult {
@@ -88,6 +91,9 @@ export default function GeneratePage() {
     experience: "",
     message: "",
     audience: "",
+    numbers: "",
+    frustration: "",
+    postGoal: "",
   });
 
   const [result, setResult] = useState<GenerateResult | null>(null);
@@ -239,10 +245,117 @@ export default function GeneratePage() {
               ))}
             </div>
 
+            {/* Optional fields */}
+            <div className="mt-6 border-t border-slate-100 pt-6">
+              <p className="mb-4 text-xs font-semibold uppercase tracking-widest text-slate-400">
+                Optional{" "}
+                <span className="font-normal normal-case tracking-normal">
+                  — adds context for stronger posts
+                </span>
+              </p>
+              <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
+                {/* Numbers */}
+                <div>
+                  <div className="mb-1.5 flex items-baseline justify-between">
+                    <label
+                      htmlFor="numbers"
+                      className="text-sm font-medium text-slate-700"
+                    >
+                      Any specific numbers or results?
+                    </label>
+                    <span
+                      className={`text-xs tabular-nums ${
+                        form.numbers.length > MAX_LENGTH * 0.9
+                          ? "text-amber-500"
+                          : "text-slate-400"
+                      }`}
+                    >
+                      {form.numbers.length}/{MAX_LENGTH}
+                    </span>
+                  </div>
+                  <input
+                    id="numbers"
+                    name="numbers"
+                    type="text"
+                    value={form.numbers}
+                    onChange={handleChange}
+                    placeholder="e.g. 3 months, 10x faster, saved $500"
+                    className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm text-slate-900 placeholder-slate-400 transition-colors focus:border-violet-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-violet-400/20"
+                  />
+                  <p className="mt-1 text-xs text-slate-400">
+                    Stats and proof points strengthen credibility.
+                  </p>
+                </div>
+
+                {/* Frustration */}
+                <div>
+                  <div className="mb-1.5 flex items-baseline justify-between">
+                    <label
+                      htmlFor="frustration"
+                      className="text-sm font-medium text-slate-700"
+                    >
+                      What frustrated or surprised you about this topic?
+                    </label>
+                    <span
+                      className={`text-xs tabular-nums ${
+                        form.frustration.length > MAX_LENGTH * 0.9
+                          ? "text-amber-500"
+                          : "text-slate-400"
+                      }`}
+                    >
+                      {form.frustration.length}/{MAX_LENGTH}
+                    </span>
+                  </div>
+                  <textarea
+                    id="frustration"
+                    name="frustration"
+                    value={form.frustration}
+                    onChange={handleChange}
+                    placeholder="e.g. Everyone told me X but actually Y"
+                    rows={3}
+                    className="w-full resize-none rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm text-slate-900 placeholder-slate-400 transition-colors focus:border-violet-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-violet-400/20"
+                  />
+                  <p className="mt-1 text-xs text-slate-400">
+                    Contrarian angles make posts stand out.
+                  </p>
+                </div>
+              </div>
+
+              {/* Post goal */}
+              <div className="mt-5">
+                <label className="mb-2 block text-sm font-medium text-slate-700">
+                  What&apos;s your goal for this post?
+                </label>
+                <div className="flex flex-wrap gap-2">
+                  {(["Get comments", "Get followers", "Get DMs", "Get saves"] as const).map(
+                    (goal) => (
+                      <button
+                        key={goal}
+                        type="button"
+                        onClick={() =>
+                          setForm((prev) => ({
+                            ...prev,
+                            postGoal: prev.postGoal === goal ? "" : goal,
+                          }))
+                        }
+                        className={`rounded-full border px-4 py-1.5 text-sm font-medium transition-colors ${
+                          form.postGoal === goal
+                            ? "border-violet-600 bg-violet-600 text-white"
+                            : "border-slate-200 bg-white text-slate-600 hover:border-violet-300 hover:text-violet-700"
+                        }`}
+                      >
+                        {goal}
+                      </button>
+                    )
+                  )}
+                </div>
+              </div>
+            </div>
+
             {/* Submit */}
             <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <p className="text-xs text-slate-400">
-                All fields required. Max 1,000 characters each.
+                Required fields marked *. Max 1,000 characters each.
               </p>
               <button
                 type="submit"
@@ -391,8 +504,16 @@ export default function GeneratePage() {
               />
             </div>
 
+            {/* Posting tip */}
+            <div className="mt-6 flex items-start gap-2.5 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+              <span aria-hidden="true">💡</span>
+              <span>
+                <strong>Pro tip:</strong> Post at 12–1 pm on weekdays, or weekend mornings for less competition.
+              </span>
+            </div>
+
             {/* Regenerate */}
-            <div className="mt-6 text-center">
+            <div className="mt-4 text-center">
               <button
                 type="button"
                 onClick={generatePosts}
