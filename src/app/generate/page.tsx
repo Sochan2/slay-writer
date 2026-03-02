@@ -149,23 +149,23 @@ export default function GeneratePage() {
   };
 
   return (
-    <div className="flex min-h-screen flex-col bg-slate-50">
+    <div className="flex min-h-screen flex-col bg-zinc-950">
       <Navbar />
 
       <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-10 sm:px-6 lg:px-8">
         {/* Page header */}
         <div className="mb-8">
-          <h1 className="text-2xl font-bold text-slate-900 sm:text-3xl">
+          <h1 className="text-2xl font-bold text-white sm:text-3xl">
             Generate LinkedIn Posts
           </h1>
-          <p className="mt-2 text-sm text-slate-500">
+          <p className="mt-2 text-sm text-zinc-400">
             Fill in the four fields below. AI will craft two SLAY-framework
             posts — one authoritative, one human.
           </p>
         </div>
 
         {/* Form card */}
-        <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
+        <div className="rounded-2xl border border-zinc-800 bg-zinc-900 p-6 shadow-sm sm:p-8">
           <form onSubmit={(e) => { e.preventDefault(); generatePosts(); }} noValidate>
             {/* Top row: 2 columns on sm+ */}
             <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
@@ -174,7 +174,7 @@ export default function GeneratePage() {
                   <div className="mb-1.5 flex items-baseline justify-between">
                     <label
                       htmlFor={field.key}
-                      className="text-sm font-medium text-slate-700"
+                      className="text-sm font-medium text-zinc-200"
                     >
                       {field.label}
                       <span className="ml-1 text-red-500" aria-hidden="true">
@@ -184,8 +184,8 @@ export default function GeneratePage() {
                     <span
                       className={`text-xs tabular-nums ${
                         form[field.key].length > MAX_LENGTH * 0.9
-                          ? "text-amber-500"
-                          : "text-slate-400"
+                          ? "text-amber-400"
+                          : "text-zinc-500"
                       }`}
                     >
                       {form[field.key].length}/{MAX_LENGTH}
@@ -199,9 +199,9 @@ export default function GeneratePage() {
                     onChange={handleChange}
                     placeholder={field.placeholder}
                     required
-                    className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm text-slate-900 placeholder-slate-400 transition-colors focus:border-violet-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-violet-400/20"
+                    className="w-full rounded-xl border border-zinc-700 bg-zinc-800 px-4 py-2.5 text-sm text-zinc-100 placeholder-zinc-500 transition-colors focus:border-amber-400 focus:bg-zinc-700 focus:outline-none focus:ring-2 focus:ring-amber-400/20"
                   />
-                  <p className="mt-1 text-xs text-slate-400">{field.hint}</p>
+                  <p className="mt-1 text-xs text-zinc-500">{field.hint}</p>
                 </div>
               ))}
             </div>
@@ -213,7 +213,7 @@ export default function GeneratePage() {
                   <div className="mb-1.5 flex items-baseline justify-between">
                     <label
                       htmlFor={field.key}
-                      className="text-sm font-medium text-slate-700"
+                      className="text-sm font-medium text-zinc-200"
                     >
                       {field.label}
                       <span className="ml-1 text-red-500" aria-hidden="true">
@@ -223,8 +223,8 @@ export default function GeneratePage() {
                     <span
                       className={`text-xs tabular-nums ${
                         form[field.key].length > MAX_LENGTH * 0.9
-                          ? "text-amber-500"
-                          : "text-slate-400"
+                          ? "text-amber-400"
+                          : "text-zinc-500"
                       }`}
                     >
                       {form[field.key].length}/{MAX_LENGTH}
@@ -238,16 +238,16 @@ export default function GeneratePage() {
                     placeholder={field.placeholder}
                     rows={5}
                     required
-                    className="w-full resize-none rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm text-slate-900 placeholder-slate-400 transition-colors focus:border-violet-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-violet-400/20"
+                    className="w-full resize-none rounded-xl border border-zinc-700 bg-zinc-800 px-4 py-2.5 text-sm text-zinc-100 placeholder-zinc-500 transition-colors focus:border-amber-400 focus:bg-zinc-700 focus:outline-none focus:ring-2 focus:ring-amber-400/20"
                   />
-                  <p className="mt-1 text-xs text-slate-400">{field.hint}</p>
+                  <p className="mt-1 text-xs text-zinc-500">{field.hint}</p>
                 </div>
               ))}
             </div>
 
             {/* Optional fields */}
-            <div className="mt-6 border-t border-slate-100 pt-6">
-              <p className="mb-4 text-xs font-semibold uppercase tracking-widest text-slate-400">
+            <div className="mt-6 border-t border-zinc-800 pt-6">
+              <p className="mb-4 text-xs font-semibold uppercase tracking-widest text-zinc-500">
                 Optional{" "}
                 <span className="font-normal normal-case tracking-normal">
                   — adds context for stronger posts
@@ -259,15 +259,15 @@ export default function GeneratePage() {
                   <div className="mb-1.5 flex items-baseline justify-between">
                     <label
                       htmlFor="numbers"
-                      className="text-sm font-medium text-slate-700"
+                      className="text-sm font-medium text-zinc-200"
                     >
                       Any specific numbers or results?
                     </label>
                     <span
                       className={`text-xs tabular-nums ${
                         form.numbers.length > MAX_LENGTH * 0.9
-                          ? "text-amber-500"
-                          : "text-slate-400"
+                          ? "text-amber-400"
+                          : "text-zinc-500"
                       }`}
                     >
                       {form.numbers.length}/{MAX_LENGTH}
@@ -280,9 +280,9 @@ export default function GeneratePage() {
                     value={form.numbers}
                     onChange={handleChange}
                     placeholder="e.g. 3 months, 10x faster, saved $500"
-                    className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm text-slate-900 placeholder-slate-400 transition-colors focus:border-violet-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-violet-400/20"
+                    className="w-full rounded-xl border border-zinc-700 bg-zinc-800 px-4 py-2.5 text-sm text-zinc-100 placeholder-zinc-500 transition-colors focus:border-amber-400 focus:bg-zinc-700 focus:outline-none focus:ring-2 focus:ring-amber-400/20"
                   />
-                  <p className="mt-1 text-xs text-slate-400">
+                  <p className="mt-1 text-xs text-zinc-500">
                     Stats and proof points strengthen credibility.
                   </p>
                 </div>
@@ -292,15 +292,15 @@ export default function GeneratePage() {
                   <div className="mb-1.5 flex items-baseline justify-between">
                     <label
                       htmlFor="frustration"
-                      className="text-sm font-medium text-slate-700"
+                      className="text-sm font-medium text-zinc-200"
                     >
                       What frustrated or surprised you about this topic?
                     </label>
                     <span
                       className={`text-xs tabular-nums ${
                         form.frustration.length > MAX_LENGTH * 0.9
-                          ? "text-amber-500"
-                          : "text-slate-400"
+                          ? "text-amber-400"
+                          : "text-zinc-500"
                       }`}
                     >
                       {form.frustration.length}/{MAX_LENGTH}
@@ -313,9 +313,9 @@ export default function GeneratePage() {
                     onChange={handleChange}
                     placeholder="e.g. Everyone told me X but actually Y"
                     rows={3}
-                    className="w-full resize-none rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm text-slate-900 placeholder-slate-400 transition-colors focus:border-violet-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-violet-400/20"
+                    className="w-full resize-none rounded-xl border border-zinc-700 bg-zinc-800 px-4 py-2.5 text-sm text-zinc-100 placeholder-zinc-500 transition-colors focus:border-amber-400 focus:bg-zinc-700 focus:outline-none focus:ring-2 focus:ring-amber-400/20"
                   />
-                  <p className="mt-1 text-xs text-slate-400">
+                  <p className="mt-1 text-xs text-zinc-500">
                     Contrarian angles make posts stand out.
                   </p>
                 </div>
@@ -323,7 +323,7 @@ export default function GeneratePage() {
 
               {/* Post goal */}
               <div className="mt-5">
-                <label className="mb-2 block text-sm font-medium text-slate-700">
+                <label className="mb-2 block text-sm font-medium text-zinc-200">
                   What&apos;s your goal for this post?
                 </label>
                 <div className="flex flex-wrap gap-2">
@@ -340,8 +340,8 @@ export default function GeneratePage() {
                         }
                         className={`rounded-full border px-4 py-1.5 text-sm font-medium transition-colors ${
                           form.postGoal === goal
-                            ? "border-violet-600 bg-violet-600 text-white"
-                            : "border-slate-200 bg-white text-slate-600 hover:border-violet-300 hover:text-violet-700"
+                            ? "border-amber-400 bg-amber-400 text-black"
+                            : "border-zinc-700 bg-zinc-800 text-zinc-300 hover:border-amber-400 hover:text-amber-400"
                         }`}
                       >
                         {goal}
@@ -354,13 +354,13 @@ export default function GeneratePage() {
 
             {/* Submit */}
             <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-              <p className="text-xs text-slate-400">
+              <p className="text-xs text-zinc-500">
                 Required fields marked *. Max 1,000 characters each.
               </p>
               <button
                 type="submit"
                 disabled={loading || !isFormValid}
-                className="flex items-center justify-center gap-2 rounded-xl bg-violet-600 px-6 py-2.5 text-sm font-semibold text-white shadow-sm transition-all hover:bg-violet-700 focus:outline-none focus:ring-2 focus:ring-violet-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 sm:min-w-[180px]"
+                className="flex items-center justify-center gap-2 rounded-xl bg-amber-400 px-6 py-2.5 text-sm font-semibold text-black shadow-sm transition-all hover:bg-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-400 focus:ring-offset-2 focus:ring-offset-zinc-900 disabled:cursor-not-allowed disabled:opacity-50 sm:min-w-[180px]"
               >
                 {loading ? (
                   <>
@@ -393,7 +393,7 @@ export default function GeneratePage() {
 
         {/* Error */}
         {error && (
-          <div className="mt-6 flex items-start gap-3 rounded-xl border border-red-200 bg-red-50 px-4 py-3.5 text-sm text-red-700">
+          <div className="mt-6 flex items-start gap-3 rounded-xl border border-red-800 bg-red-950/50 px-4 py-3.5 text-sm text-red-400">
             <svg
               className="mt-0.5 h-4 w-4 shrink-0"
               viewBox="0 0 16 16"
@@ -418,11 +418,11 @@ export default function GeneratePage() {
             <div className="mb-4 flex items-center gap-3">
               <div className="h-5 w-5 animate-spin">
                 <svg viewBox="0 0 24 24" fill="none">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="#7c3aed" strokeWidth="4" />
-                  <path className="opacity-75" fill="#7c3aed" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="#F59E0B" strokeWidth="4" />
+                  <path className="opacity-75" fill="#F59E0B" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
                 </svg>
               </div>
-              <p className="text-sm font-medium text-violet-700">
+              <p className="text-sm font-medium text-amber-400">
                 Crafting your posts with the SLAY Framework…
               </p>
             </div>
@@ -430,17 +430,17 @@ export default function GeneratePage() {
               {[1, 2].map((i) => (
                 <div
                   key={i}
-                  className="h-80 rounded-2xl border border-slate-200 bg-white shadow-sm"
+                  className="h-80 rounded-2xl border border-zinc-800 bg-zinc-900 shadow-sm"
                 >
-                  <div className="border-b border-slate-100 p-5">
-                    <div className="mb-3 h-5 w-24 animate-pulse rounded-full bg-slate-100" />
-                    <div className="h-4 w-32 animate-pulse rounded bg-slate-100" />
+                  <div className="border-b border-zinc-800 p-5">
+                    <div className="mb-3 h-5 w-24 animate-pulse rounded-full bg-zinc-800" />
+                    <div className="h-4 w-32 animate-pulse rounded bg-zinc-800" />
                   </div>
                   <div className="space-y-2 p-5">
                     {[90, 75, 60, 85, 50, 70, 40].map((w, j) => (
                       <div
                         key={j}
-                        className="h-3 animate-pulse rounded bg-slate-100"
+                        className="h-3 animate-pulse rounded bg-zinc-800"
                         style={{ width: `${w}%` }}
                       />
                     ))}
@@ -456,10 +456,10 @@ export default function GeneratePage() {
           <div ref={resultsRef} className="mt-8">
             <div className="mb-4 flex items-center justify-between">
               <div>
-                <h2 className="text-lg font-semibold text-slate-900">
+                <h2 className="text-lg font-semibold text-white">
                   Your posts are ready
                 </h2>
-                <p className="text-sm text-slate-500">
+                <p className="text-sm text-zinc-400">
                   Pick your favourite. Copy and paste to LinkedIn.
                 </p>
               </div>
@@ -469,7 +469,7 @@ export default function GeneratePage() {
                   setResult(null);
                   setError(null);
                 }}
-                className="text-xs text-slate-400 hover:text-slate-700 transition-colors"
+                className="text-xs text-zinc-500 hover:text-zinc-200 transition-colors"
               >
                 Clear
               </button>
@@ -481,7 +481,7 @@ export default function GeneratePage() {
                 (step) => (
                   <span
                     key={step}
-                    className="rounded-full border border-violet-200 bg-violet-50 px-3 py-1 text-xs font-medium text-violet-700"
+                    className="rounded-full border border-amber-800 bg-amber-900/30 px-3 py-1 text-xs font-medium text-amber-400"
                   >
                     {step}
                   </span>
@@ -505,7 +505,7 @@ export default function GeneratePage() {
             </div>
 
             {/* Posting tip */}
-            <div className="mt-6 flex items-start gap-2.5 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+            <div className="mt-6 flex items-start gap-2.5 rounded-xl border border-amber-800 bg-amber-900/20 px-4 py-3 text-sm text-amber-300">
               <span aria-hidden="true">💡</span>
               <span>
                 <strong>Pro tip:</strong> Post at 12–1 pm on weekdays, or weekend mornings for less competition.
@@ -517,7 +517,7 @@ export default function GeneratePage() {
               <button
                 type="button"
                 onClick={generatePosts}
-                className="text-sm text-slate-500 underline-offset-2 hover:text-violet-700 hover:underline transition-colors"
+                className="text-sm text-zinc-500 underline-offset-2 hover:text-amber-400 hover:underline transition-colors"
               >
                 Not satisfied? Regenerate →
               </button>
@@ -527,10 +527,10 @@ export default function GeneratePage() {
       </main>
 
       {/* Footer strip */}
-      <div className="mt-auto border-t border-slate-100 py-4 text-center text-xs text-slate-400">
+      <div className="mt-auto border-t border-zinc-800 py-4 text-center text-xs text-zinc-500">
         <p>
           Powered by Claude AI · SLAY Framework ·{" "}
-          <a href="/" className="hover:text-violet-600 transition-colors">
+          <a href="/" className="hover:text-amber-400 transition-colors">
             SLAYWriter
           </a>
         </p>

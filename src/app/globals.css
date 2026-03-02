@@ -1,8 +1,8 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #0f172a;
+  --background: #000000;
+  --foreground: #f4f4f5;
 }
 
 body {
@@ -12,7 +12,7 @@ body {
 
 /* Gradient text utility */
 .gradient-text {
-  background: linear-gradient(135deg, #7c3aed 0%, #4f46e5 50%, #7c3aed 100%);
+  background: linear-gradient(135deg, #FBBF24 0%, #F59E0B 50%, #FBBF24 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -26,7 +26,7 @@ body {
 /* Smooth scrollbar */
 * {
   scrollbar-width: thin;
-  scrollbar-color: #e2e8f0 transparent;
+  scrollbar-color: #3f3f46 transparent;
 }
 
 *::-webkit-scrollbar {
@@ -38,6 +38,6 @@ body {
 }
 
 *::-webkit-scrollbar-thumb {
-  background-color: #e2e8f0;
+  background-color: #3f3f46;
   border-radius: 3px;
 }

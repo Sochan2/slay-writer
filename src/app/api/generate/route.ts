@@ -7,8 +7,8 @@ const IS_DEV = process.env.NODE_ENV === "development";
 
 // ── In-memory rate limiter ───────────────────────────────────────────────────
 // Resets on server restart. Swap for Redis/KV when persistence is needed.
-const DAILY_LIMIT = 3;
-const WINDOW_MS = 24 * 60 * 60 * 1000;
+const DAILY_LIMIT = 10;
+const WINDOW_MS = 30 * 24 * 60 * 60 * 1000; // 30 days
 const rateLimitStore = new Map<string, { count: number; resetAt: number }>();
 
 function getClientIp(request: NextRequest): string {
@@ -54,7 +54,7 @@ export async function POST(request: NextRequest) {
   const ip = getClientIp(request);
   if (!checkRateLimit(ip)) {
     return NextResponse.json(
-      { error: "Daily limit reached. You've used your 3 free generations for today." },
+      { error: "You've used your 10 free generations this month. Upgrade to Pro for unlimited access." },
       { status: 429 }
     );
   }
@@ -156,6 +156,7 @@ Writing rules (strictly enforce all):
 - First 2 lines must be magnetic — they show before "see more"
 - Conversational, direct, human voice
 - Preserve line breaks with \\n\\n between paragraphs and \\n for single line breaks within a block
+- Don't break into a new paragraph after every single sentence. Group 2-3 related sentences together before adding a line break. This creates natural reading rhythm, not robotic pacing. Only break when the topic genuinely shifts.
 - Opening hook MUST be controversial or challenge a widely-held belief — a genuine strong opinion, not clickbait
 - Line 3 MUST be a rehook: a short, punchy sentence that makes readers feel they'll miss something if they stop
 - CTA MUST be a specific, concrete question about the topic (e.g. "What's your biggest struggle with X? Tell me below 👇") — NEVER use generic CTAs like "Who else feels this?" or "Drop a 🔥 if you agree"

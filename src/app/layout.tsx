@@ -34,7 +34,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className="scroll-smooth" suppressHydrationWarning>
-      <body className={`${inter.variable} ${caveat.variable} font-sans antialiased bg-white text-[#111928]`}>
+      <body className={`${inter.variable} ${caveat.variable} font-sans antialiased bg-black text-zinc-100`}>
         {children}
         <Analytics />
       </body>
