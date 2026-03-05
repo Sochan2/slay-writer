@@ -3,8 +3,6 @@ import { getStripe } from "@/lib/stripe";
 import { createAdminClient } from "@/lib/supabase/admin";
 import Stripe from "stripe";
 
-export const config = { api: { bodyParser: false } };
-
 export async function POST(request: NextRequest) {
   const body = await request.text();
   const signature = request.headers.get("stripe-signature");
