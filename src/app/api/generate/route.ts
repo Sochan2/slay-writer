@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import Anthropic from "@anthropic-ai/sdk";
+import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 
 const MAX_FIELD_LENGTH = 1000;
 const REQUIRED_FIELDS = ["topic", "experience", "message", "audience"] as const;
@@ -7,7 +9,7 @@ const IS_DEV = process.env.NODE_ENV === "development";
 
 // ── In-memory rate limiter ───────────────────────────────────────────────────
 // Resets on server restart. Swap for Redis/KV when persistence is needed.
-const DAILY_LIMIT = 10;
+const MONTHLY_LIMIT = 10;
 const WINDOW_MS = 30 * 24 * 60 * 60 * 1000; // 30 days
 const rateLimitStore = new Map<string, { count: number; resetAt: number }>();
 
@@ -19,20 +21,23 @@ function getClientIp(request: NextRequest): string {
   );
 }
 
-function checkRateLimit(ip: string): boolean {
+function checkRateLimit(ip: string): { allowed: boolean; remaining: number } {
   const now = Date.now();
   const entry = rateLimitStore.get(ip);
 
   if (!entry || now > entry.resetAt) {
     rateLimitStore.set(ip, { count: 1, resetAt: now + WINDOW_MS });
-    return true;
+    return { allowed: true, remaining: MONTHLY_LIMIT - 1 };
   }
 
-  if (entry.count >= DAILY_LIMIT) return false;
+  if (entry.count >= MONTHLY_LIMIT) {
+    return { allowed: false, remaining: 0 };
+  }
 
   entry.count += 1;
-  return true;
+  return { allowed: true, remaining: MONTHLY_LIMIT - entry.count };
 }
+
 // ────────────────────────────────────────────────────────────────────────────
 
 /**
@@ -51,13 +56,45 @@ function getAnthropicClient(): Anthropic {
 }
 
 export async function POST(request: NextRequest) {
-  const ip = getClientIp(request);
-  if (!checkRateLimit(ip)) {
-    return NextResponse.json(
-      { error: "You've used your 10 free generations this month. Upgrade to Pro for unlimited access." },
-      { status: 429 }
-    );
+  // ── Subscription / rate-limit check ────────────────────────────────────────
+  let isPro = false;
+
+  try {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (user) {
+      const admin = createAdminClient();
+      const { data: sub } = await admin
+        .from("subscriptions")
+        .select("status")
+        .eq("user_id", user.id)
+        .in("status", ["active", "trialing"])
+        .maybeSingle();
+      isPro = !!sub;
+    }
+  } catch {
+    // If Supabase is unavailable, fall back to free tier
+    isPro = false;
   }
+
+  if (!isPro) {
+    const ip = getClientIp(request);
+    const { allowed, remaining } = checkRateLimit(ip);
+    if (!allowed) {
+      return NextResponse.json(
+        {
+          error:
+            "You've used your 10 free generations this month. Upgrade to Pro for unlimited access.",
+          upgradeRequired: true,
+          remaining: 0,
+        },
+        { status: 429 }
+      );
+    }
+    // Attach remaining count so the UI can show a counter
+    void remaining;
+  }
+  // ───────────────────────────────────────────────────────────────────────────
 
   try {
     const body = await request.json().catch(() => null);
@@ -141,6 +178,12 @@ export async function POST(request: NextRequest) {
     // Initialise client — throws a clear error if API key is missing/invalid
     const client = getAnthropicClient();
 
+    const postCount = isPro ? "THREE" : "TWO";
+    const rantJsonField = isPro ? `\n  "rantPost": "..."` : "";
+    const rantRules = isPro
+      ? `\n\nrantPost rules:\n- Raw, passionate, unapologetic hot-take\n- One strong controversial opinion stated with zero hedging\n- Confrontational but never aggressive — punchy, not mean\n- Maximum personality, zero corporate speak\n- Same SLAY structure but with completely unfiltered voice\n- Opens with a blunt "unpopular opinion" or "let's be honest" statement`
+      : "";
+
     const prompt = `You are an expert LinkedIn content strategist who writes viral posts using the SLAY Framework.
 
 SLAY Framework:
@@ -167,11 +210,11 @@ User inputs:
 - Main Message: ${(message as string).trim()}
 - Target Audience: ${(audience as string).trim()}${optionalContext}
 
-Generate exactly TWO LinkedIn posts and return ONLY this JSON (no markdown, no extra text):
+Generate exactly ${postCount} LinkedIn posts and return ONLY this JSON (no markdown, no extra text):
 
 {
   "authorityPost": "...",
-  "relatablePost": "..."
+  "relatablePost": "..."${rantJsonField}
 }
 
 authorityPost rules:
@@ -184,9 +227,9 @@ relatablePost rules:
 - Empathetic, human, vulnerable tone
 - Lead with a relatable struggle or honest emotion
 - Make the reader feel seen
-- Story-driven, warm, personal
+- Story-driven, warm, personal${rantRules}
 
-Both posts must:
+All posts must:
 1. Follow SLAY Framework exactly
 2. Be 180-280 words
 3. Open with a bold, controversial or contrarian statement in lines 1-2
@@ -199,7 +242,7 @@ Return ONLY the raw JSON object.`;
 
     const response = await client.messages.create({
       model: "claude-sonnet-4-5",
-      max_tokens: 2048,
+      max_tokens: isPro ? 3072 : 2048,
       messages: [{ role: "user", content: prompt }],
     });
 
@@ -209,7 +252,7 @@ Return ONLY the raw JSON object.`;
       throw new Error("Unexpected response type from Anthropic API");
     }
 
-    let parsed: { authorityPost: string; relatablePost: string };
+    let parsed: { authorityPost: string; relatablePost: string; rantPost?: string };
 
     try {
       parsed = JSON.parse(content.text);
@@ -231,10 +274,22 @@ Return ONLY the raw JSON object.`;
       throw new Error("Invalid response structure from AI");
     }
 
-    return NextResponse.json({
+    const responsePayload: {
+      authorityPost: string;
+      relatablePost: string;
+      rantPost?: string;
+      isPro: boolean;
+    } = {
       authorityPost: parsed.authorityPost.trim(),
       relatablePost: parsed.relatablePost.trim(),
-    });
+      isPro,
+    };
+
+    if (isPro && typeof parsed.rantPost === "string" && parsed.rantPost.trim().length > 0) {
+      responsePayload.rantPost = parsed.rantPost.trim();
+    }
+
+    return NextResponse.json(responsePayload);
   } catch (error) {
     console.error("[/api/generate] Error:", error);
 

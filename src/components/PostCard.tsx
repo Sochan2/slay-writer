@@ -6,7 +6,7 @@ interface PostCardProps {
   title: string;
   subtitle: string;
   content: string;
-  variant: "authority" | "relatable";
+  variant: "authority" | "relatable" | "rant";
 }
 
 export function PostCard({ title, subtitle, content, variant }: PostCardProps) {
@@ -36,10 +36,16 @@ export function PostCard({ title, subtitle, content, variant }: PostCardProps) {
   const badgeStyles =
     variant === "authority"
       ? "bg-amber-900/50 text-amber-400 ring-1 ring-amber-700"
-      : "bg-emerald-900/50 text-emerald-400 ring-1 ring-emerald-700";
+      : variant === "relatable"
+      ? "bg-emerald-900/50 text-emerald-400 ring-1 ring-emerald-700"
+      : "bg-red-900/50 text-red-400 ring-1 ring-red-700";
 
   const accentBorder =
-    variant === "authority" ? "border-t-amber-400" : "border-t-emerald-500";
+    variant === "authority"
+      ? "border-t-amber-400"
+      : variant === "relatable"
+      ? "border-t-emerald-500"
+      : "border-t-red-500";
 
   return (
     <div
@@ -51,7 +57,7 @@ export function PostCard({ title, subtitle, content, variant }: PostCardProps) {
           <span
             className={`inline-flex w-fit items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${badgeStyles}`}
           >
-            {variant === "authority" ? "Expert Voice" : "Human Voice"}
+            {variant === "authority" ? "Expert Voice" : variant === "relatable" ? "Human Voice" : "Rant Mode"}
           </span>
           <h3 className="text-sm font-semibold text-zinc-100">{title}</h3>
           <p className="text-xs text-zinc-500">{subtitle}</p>

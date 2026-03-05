@@ -17,6 +17,8 @@ interface FormData {
 interface GenerateResult {
   authorityPost: string;
   relatablePost: string;
+  rantPost?: string;
+  isPro?: boolean;
 }
 
 const MAX_LENGTH = 1000;
@@ -99,6 +101,7 @@ export default function GeneratePage() {
   const [result, setResult] = useState<GenerateResult | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [upgradeRequired, setUpgradeRequired] = useState(false);
   const resultsRef = useRef<HTMLDivElement>(null);
 
   const handleChange = (
@@ -119,6 +122,7 @@ export default function GeneratePage() {
     setLoading(true);
     setError(null);
     setResult(null);
+    setUpgradeRequired(false);
 
     try {
       const response = await fetch("/api/generate", {
@@ -130,6 +134,10 @@ export default function GeneratePage() {
       const data = await response.json();
 
       if (!response.ok) {
+        if (response.status === 429 && data.upgradeRequired) {
+          setUpgradeRequired(true);
+          return;
+        }
         throw new Error(data.error || "Failed to generate posts.");
       }
 
@@ -391,6 +399,25 @@ export default function GeneratePage() {
           </form>
         </div>
 
+        {/* Upgrade required banner */}
+        {upgradeRequired && (
+          <div className="mt-6 rounded-2xl border border-amber-700 bg-amber-950/40 p-6 text-center">
+            <p className="mb-1 text-lg font-bold text-white">
+              You&apos;ve used all 10 free generations this month
+            </p>
+            <p className="mb-5 text-sm text-zinc-400">
+              Upgrade to Pro for unlimited posts. 7-day free trial — no charge today.
+            </p>
+            <a
+              href="/pricing"
+              className="inline-flex items-center gap-2 rounded-xl bg-amber-400 px-7 py-3 text-sm font-bold text-black shadow-lg shadow-amber-400/20 hover:bg-amber-300 transition-colors"
+            >
+              Start Free Trial →
+            </a>
+            <p className="mt-3 text-xs text-zinc-500">$9/month after trial · cancel any time</p>
+          </div>
+        )}
+
         {/* Error */}
         {error && (
           <div className="mt-6 flex items-start gap-3 rounded-xl border border-red-800 bg-red-950/50 px-4 py-3.5 text-sm text-red-400">
@@ -504,13 +531,61 @@ export default function GeneratePage() {
               />
             </div>
 
-            {/* Posting tip */}
-            <div className="mt-6 flex items-start gap-2.5 rounded-xl border border-amber-800 bg-amber-900/20 px-4 py-3 text-sm text-amber-300">
-              <span aria-hidden="true">💡</span>
-              <span>
-                <strong>Pro tip:</strong> Post at 12–1 pm on weekdays, or weekend mornings for less competition.
-              </span>
+            {/* Rant post — Pro only */}
+            <div className="mt-6">
+              {result.isPro && result.rantPost ? (
+                <PostCard
+                  title="Rant Post"
+                  subtitle="Raw, opinionated, unapologetic hot-take"
+                  content={result.rantPost}
+                  variant="rant"
+                />
+              ) : (
+                <div className="relative overflow-hidden rounded-2xl border border-zinc-800 bg-zinc-900 shadow-sm border-t-2 border-t-red-500">
+                  {/* blurred preview rows */}
+                  <div className="select-none blur-sm pointer-events-none px-5 py-4 space-y-2" aria-hidden="true">
+                    {[85, 70, 90, 55, 75, 60, 80].map((w, i) => (
+                      <div key={i} className="h-3 rounded bg-zinc-700" style={{ width: `${w}%` }} />
+                    ))}
+                  </div>
+                  {/* overlay */}
+                  <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-zinc-950/80 px-6 text-center">
+                    <span className="text-2xl" aria-hidden="true">🔥</span>
+                    <div>
+                      <p className="text-sm font-semibold text-white">Rant Post — Pro only</p>
+                      <p className="mt-1 text-xs text-zinc-400">Raw, opinionated, zero-filter. Unlock with a Pro plan.</p>
+                    </div>
+                    <a
+                      href="/pricing"
+                      className="mt-1 inline-flex items-center gap-1.5 rounded-lg bg-red-500 px-4 py-2 text-xs font-bold text-white hover:bg-red-400 transition-colors"
+                    >
+                      Upgrade to Pro →
+                    </a>
+                  </div>
+                </div>
+              )}
             </div>
+
+            {/* Posting tip */}
+            {(() => {
+              const tips: Record<string, string> = {
+                "Get comments": "Post Tuesday–Thursday at 8–10 am — professionals are active and more likely to jump into a conversation.",
+                "Get followers": "Post Monday or Wednesday morning — the algorithm rewards early engagement and shows new content to more people.",
+                "Get DMs": "Post at lunch (12–1 pm) when people have time to read carefully and reach out.",
+                "Get saves": "Try weekend mornings — people browse and save reference content when they're not in work mode.",
+              };
+              const tip = form.postGoal && tips[form.postGoal]
+                ? tips[form.postGoal]
+                : "Post at 12–1 pm on weekdays, or weekend mornings for less competition.";
+              return (
+                <div className="mt-6 flex items-start gap-2.5 rounded-xl border border-amber-800 bg-amber-900/20 px-4 py-3 text-sm text-amber-300">
+                  <span aria-hidden="true">💡</span>
+                  <span>
+                    <strong>Best time to post:</strong> {tip}
+                  </span>
+                </div>
+              );
+            })()}
 
             {/* Regenerate */}
             <div className="mt-4 text-center">

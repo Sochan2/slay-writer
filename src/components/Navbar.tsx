@@ -1,14 +1,23 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { motion } from "framer-motion";
+import { createClient } from "@/lib/supabase/client";
 
 const MotionLink = motion(Link);
 
 export function Navbar() {
   const pathname = usePathname();
+  const router = useRouter();
   const isGenerator = pathname === "/generate";
+
+  async function handleLogout() {
+    const supabase = createClient();
+    await supabase.auth.signOut();
+    router.push("/login");
+    router.refresh();
+  }
 
   return (
     <motion.header
@@ -39,24 +48,33 @@ export function Navbar() {
             <a href="#how-it-works" className="text-sm text-zinc-400 hover:text-white transition-colors">
               How it works
             </a>
-            <a href="#pricing" className="text-sm text-zinc-400 hover:text-white transition-colors">
+            <Link href="/pricing" className="text-sm text-zinc-400 hover:text-white transition-colors">
               Pricing
-            </a>
+            </Link>
           </div>
         )}
 
         {/* Right side */}
         <div className="flex items-center gap-3">
           {isGenerator ? (
-            <Link
-              href="/"
-              className="flex items-center gap-1.5 text-sm text-zinc-400 hover:text-white transition-colors"
-            >
-              <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
-                <path d="M10 12L6 8l4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
-              Back to home
-            </Link>
+            <>
+              <Link
+                href="/"
+                className="flex items-center gap-1.5 text-sm text-zinc-400 hover:text-white transition-colors"
+              >
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                  <path d="M10 12L6 8l4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+                Back to home
+              </Link>
+              <button
+                type="button"
+                onClick={handleLogout}
+                className="text-sm text-zinc-400 hover:text-white transition-colors"
+              >
+                Logout
+              </button>
+            </>
           ) : (
             <MotionLink
               href="/generate"
