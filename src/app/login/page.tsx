@@ -2,7 +2,7 @@
 
 import { Suspense, useState } from "react";
 import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 
 export default function LoginPage() {
@@ -14,13 +14,9 @@ export default function LoginPage() {
 }
 
 function LoginContent() {
-  const router = useRouter();
   const searchParams = useSearchParams();
   const hasAuthError = searchParams.get("error") === "auth";
 
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
   const [error, setError] = useState<string | null>(
     hasAuthError ? "Authentication failed. Please try again." : null
@@ -43,22 +39,6 @@ function LoginContent() {
     }
   }
 
-  async function handleEmailLogin(e: React.FormEvent) {
-    e.preventDefault();
-    setLoading(true);
-    setError(null);
-
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
-
-    if (error) {
-      setError(error.message);
-      setLoading(false);
-    } else {
-      router.push("/generate");
-      router.refresh();
-    }
-  }
-
   return (
     <div className="flex min-h-screen flex-col items-center justify-center bg-zinc-950 px-4">
       {/* Logo */}
@@ -75,9 +55,7 @@ function LoginContent() {
 
       <div className="w-full max-w-sm rounded-2xl border border-zinc-800 bg-zinc-900 p-8 shadow-xl">
         <h1 className="mb-1 text-xl font-bold text-white">Sign in</h1>
-        <p className="mb-6 text-sm text-zinc-400">
-          Continue to SLAY Writer
-        </p>
+        <p className="mb-6 text-sm text-zinc-400">Continue to SLAY Writer</p>
 
         {/* Error */}
         {error && (
@@ -94,7 +72,7 @@ function LoginContent() {
         <button
           type="button"
           onClick={handleGoogleLogin}
-          disabled={googleLoading || loading}
+          disabled={googleLoading}
           className="flex w-full items-center justify-center gap-3 rounded-xl border border-zinc-700 bg-zinc-800 px-4 py-2.5 text-sm font-medium text-zinc-100 transition-colors hover:bg-zinc-700 disabled:cursor-not-allowed disabled:opacity-50"
         >
           {googleLoading ? (
@@ -109,76 +87,12 @@ function LoginContent() {
           )}
           Continue with Google
         </button>
-
-        {/* Divider */}
-        <div className="my-5 flex items-center gap-3">
-          <div className="h-px flex-1 bg-zinc-800" />
-          <span className="text-xs text-zinc-500">or</span>
-          <div className="h-px flex-1 bg-zinc-800" />
-        </div>
-
-        {/* Email/password form */}
-        <form onSubmit={handleEmailLogin} noValidate className="space-y-4">
-          <div>
-            <label htmlFor="email" className="mb-1.5 block text-sm font-medium text-zinc-200">
-              Email
-            </label>
-            <input
-              id="email"
-              type="email"
-              autoComplete="email"
-              required
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="you@example.com"
-              className="w-full rounded-xl border border-zinc-700 bg-zinc-800 px-4 py-2.5 text-sm text-zinc-100 placeholder-zinc-500 transition-colors focus:border-amber-400 focus:outline-none focus:ring-2 focus:ring-amber-400/20"
-            />
-          </div>
-
-          <div>
-            <label htmlFor="password" className="mb-1.5 block text-sm font-medium text-zinc-200">
-              Password
-            </label>
-            <input
-              id="password"
-              type="password"
-              autoComplete="current-password"
-              required
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="••••••••"
-              className="w-full rounded-xl border border-zinc-700 bg-zinc-800 px-4 py-2.5 text-sm text-zinc-100 placeholder-zinc-500 transition-colors focus:border-amber-400 focus:outline-none focus:ring-2 focus:ring-amber-400/20"
-            />
-          </div>
-
-          <button
-            type="submit"
-            disabled={loading || googleLoading || !email || !password}
-            className="flex w-full items-center justify-center gap-2 rounded-xl bg-amber-400 px-4 py-2.5 text-sm font-semibold text-black transition-colors hover:bg-amber-500 disabled:cursor-not-allowed disabled:opacity-50"
-          >
-            {loading ? <Spinner /> : null}
-            Sign in
-          </button>
-        </form>
-
-        <p className="mt-5 text-center text-xs text-zinc-500">
-          Don&apos;t have an account?{" "}
-          <a
-            href="https://supabase.com"
-            className="text-amber-400 hover:underline"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Sign up via Supabase
-          </a>
-        </p>
       </div>
     </div>
   );
 }
 
 function Spinner() {
-
   return (
     <svg className="h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none" aria-hidden="true">
       <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
