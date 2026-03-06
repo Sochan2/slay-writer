@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { createClient } from "@/lib/supabase/client";
+import { useEffect, useState } from "react";
 
 const MotionLink = motion(Link);
 
@@ -12,11 +13,51 @@ export function Navbar() {
   const router = useRouter();
   const isGenerator = pathname === "/generate";
 
+  const [hasActiveSub, setHasActiveSub] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [portalLoading, setPortalLoading] = useState(false);
+
+  useEffect(() => {
+    async function checkSubscription() {
+      const supabase = createClient();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
+      if (!user) return;
+      setIsLoggedIn(true);
+
+      const { data } = await supabase
+        .from("subscriptions")
+        .select("status")
+        .eq("user_id", user.id)
+        .in("status", ["active", "trialing"])
+        .single();
+
+      setHasActiveSub(!!data);
+    }
+
+    checkSubscription();
+  }, []);
+
   async function handleLogout() {
     const supabase = createClient();
     await supabase.auth.signOut();
     router.push("/login");
     router.refresh();
+  }
+
+  async function handleManageSubscription() {
+    setPortalLoading(true);
+    try {
+      const res = await fetch("/api/portal", { method: "POST" });
+      const data = await res.json();
+      if (data.url) {
+        window.location.href = data.url;
+      }
+    } finally {
+      setPortalLoading(false);
+    }
   }
 
   return (
@@ -67,6 +108,30 @@ export function Navbar() {
                 </svg>
                 Back to home
               </Link>
+              {hasActiveSub && (
+                <button
+                  type="button"
+                  onClick={handleManageSubscription}
+                  disabled={portalLoading}
+                  className="text-sm text-zinc-400 hover:text-white transition-colors disabled:opacity-50"
+                >
+                  {portalLoading ? "Loading…" : "Manage Subscription"}
+                </button>
+              )}
+              {isLoggedIn && (
+                hasActiveSub ? (
+                  <span className="rounded-full bg-amber-400 px-2.5 py-0.5 text-xs font-semibold text-black">
+                    Pro
+                  </span>
+                ) : (
+                  <Link
+                    href="/pricing"
+                    className="rounded-full bg-zinc-700 px-2.5 py-0.5 text-xs font-semibold text-zinc-300 hover:bg-zinc-600 transition-colors"
+                  >
+                    Free
+                  </Link>
+                )
+              )}
               <button
                 type="button"
                 onClick={handleLogout}
