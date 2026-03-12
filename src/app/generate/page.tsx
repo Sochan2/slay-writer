@@ -27,7 +27,7 @@ const FIELDS: {
   key: keyof FormData;
   label: string;
   placeholder: string;
-  hint: string;
+  hint?: string;
   multiline: boolean;
 }[] = [
   {
