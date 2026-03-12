@@ -46,15 +46,14 @@ const FIELDS: {
   },
   {
     key: "experience",
-    label: "Personal Experience",
+    label: "What did you learn from it?",
     placeholder:
-      "e.g. I was promoted to manager after 2 years as a developer. I had no training and felt like a fraud for months...",
-    hint: "What happened to you? Be specific.",
+      "e.g. I experienced how to learn code to match my team's level can build trust and credibility.",
     multiline: true,
   },
   {
     key: "message",
-    label: "Main Message",
+    label: "What do you want people to feel?",
     placeholder:
       "e.g. Imposter syndrome often means you care deeply — that's actually a strength, not a weakness.",
     hint: "What's the key takeaway you want to share?",
@@ -103,6 +102,23 @@ export default function GeneratePage() {
   const [error, setError] = useState<string | null>(null);
   const [upgradeRequired, setUpgradeRequired] = useState(false);
   const resultsRef = useRef<HTMLDivElement>(null);
+
+  // Mobile quiz state
+  const [mobileStep, setMobileStep] = useState(0);
+  const [slideDir, setSlideDir] = useState<"forward" | "back">("forward");
+  const [stepKey, setStepKey] = useState(0);
+
+  const goNext = () => {
+    setSlideDir("forward");
+    setStepKey((k) => k + 1);
+    setMobileStep((s) => s + 1);
+  };
+
+  const goBack = () => {
+    setSlideDir("back");
+    setStepKey((k) => k + 1);
+    setMobileStep((s) => s - 1);
+  };
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
@@ -172,8 +188,138 @@ export default function GeneratePage() {
           </p>
         </div>
 
+        {/* ── Mobile quiz (hidden on md+) ── */}
+        <div className="md:hidden">
+          {/* Progress bar */}
+          <div className="mb-6">
+            <div className="mb-2 flex items-center justify-between">
+              <span className="text-xs font-medium text-zinc-400">
+                Step {mobileStep + 1} of {FIELDS.length}
+              </span>
+              <span className="text-xs text-zinc-600">
+                {Math.round(((mobileStep + 1) / FIELDS.length) * 100)}%
+              </span>
+            </div>
+            <div className="h-1 w-full rounded-full bg-zinc-800">
+              <div
+                className="h-1 rounded-full bg-amber-400 transition-all duration-300"
+                style={{ width: `${((mobileStep + 1) / FIELDS.length) * 100}%` }}
+              />
+            </div>
+          </div>
+
+          {/* Step card */}
+          <div
+            key={stepKey}
+            className={`quiz-slide-${slideDir} flex min-h-[60vh] flex-col rounded-2xl border border-zinc-800 bg-zinc-900 p-6`}
+          >
+            {/* Question */}
+            <div className="mb-6 flex-shrink-0">
+              <p className="mb-1 text-xs font-semibold uppercase tracking-widest text-amber-400">
+                Question {mobileStep + 1}
+              </p>
+              <h2 className="text-2xl font-bold leading-snug text-white">
+                {FIELDS[mobileStep].label}
+              </h2>
+              {FIELDS[mobileStep].hint && (
+                <p className="mt-2 text-sm text-zinc-400">
+                  {FIELDS[mobileStep].hint}
+                </p>
+              )}
+            </div>
+
+            {/* Input */}
+            <div className="flex flex-1 flex-col">
+              {FIELDS[mobileStep].multiline ? (
+                <textarea
+                  id={`mobile-${FIELDS[mobileStep].key}`}
+                  name={FIELDS[mobileStep].key}
+                  value={form[FIELDS[mobileStep].key]}
+                  onChange={handleChange}
+                  placeholder={FIELDS[mobileStep].placeholder}
+                  rows={6}
+                  autoFocus
+                  className="flex-1 w-full resize-none rounded-xl border border-zinc-700 bg-zinc-800 px-4 py-3 text-base text-zinc-100 placeholder-zinc-500 transition-colors focus:border-amber-400 focus:bg-zinc-700 focus:outline-none focus:ring-2 focus:ring-amber-400/20"
+                />
+              ) : (
+                <input
+                  id={`mobile-${FIELDS[mobileStep].key}`}
+                  name={FIELDS[mobileStep].key}
+                  type="text"
+                  value={form[FIELDS[mobileStep].key]}
+                  onChange={handleChange}
+                  placeholder={FIELDS[mobileStep].placeholder}
+                  autoFocus
+                  className="w-full rounded-xl border border-zinc-700 bg-zinc-800 px-4 py-3 text-base text-zinc-100 placeholder-zinc-500 transition-colors focus:border-amber-400 focus:bg-zinc-700 focus:outline-none focus:ring-2 focus:ring-amber-400/20"
+                />
+              )}
+              <div className="mt-1.5 text-right">
+                <span
+                  className={`text-xs tabular-nums ${
+                    form[FIELDS[mobileStep].key].length > MAX_LENGTH * 0.9
+                      ? "text-amber-400"
+                      : "text-zinc-600"
+                  }`}
+                >
+                  {form[FIELDS[mobileStep].key].length}/{MAX_LENGTH}
+                </span>
+              </div>
+            </div>
+
+            {/* Navigation */}
+            <div className="mt-6 flex items-center justify-between gap-3">
+              {mobileStep > 0 ? (
+                <button
+                  type="button"
+                  onClick={goBack}
+                  className="flex items-center gap-1.5 rounded-xl border border-zinc-700 bg-zinc-800 px-5 py-3 text-sm font-medium text-zinc-300 transition-colors hover:border-zinc-600 hover:text-white"
+                >
+                  <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                    <path d="M10 3L5 8l5 5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
+                  Back
+                </button>
+              ) : (
+                <div />
+              )}
+
+              {mobileStep < FIELDS.length - 1 ? (
+                <button
+                  type="button"
+                  onClick={goNext}
+                  disabled={form[FIELDS[mobileStep].key].trim().length === 0}
+                  className="flex items-center gap-1.5 rounded-xl bg-amber-400 px-6 py-3 text-sm font-semibold text-black transition-all hover:bg-amber-500 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  Next
+                  <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                    <path d="M6 3l5 5-5 5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={generatePosts}
+                  disabled={loading || !isFormValid}
+                  className="flex items-center gap-2 rounded-xl bg-amber-400 px-6 py-3 text-sm font-semibold text-black transition-all hover:bg-amber-500 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  {loading ? (
+                    <>
+                      <Spinner />
+                      Generating…
+                    </>
+                  ) : (
+                    <>
+                      Generate ✨
+                    </>
+                  )}
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+
         {/* Form card */}
-        <div className="rounded-2xl border border-zinc-800 bg-zinc-900 p-6 shadow-sm sm:p-8">
+        <div className="hidden md:block rounded-2xl border border-zinc-800 bg-zinc-900 p-6 shadow-sm sm:p-8">
           <form onSubmit={(e) => { e.preventDefault(); generatePosts(); }} noValidate>
             {/* Top row: 2 columns on sm+ */}
             <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">

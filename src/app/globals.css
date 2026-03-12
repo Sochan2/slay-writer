@@ -23,6 +23,22 @@ body {
   font-family: var(--font-caveat, cursive);
 }
 
+/* Mobile quiz slide animations */
+@keyframes quizSlideInRight {
+  from { transform: translateX(48px); opacity: 0; }
+  to   { transform: translateX(0);    opacity: 1; }
+}
+@keyframes quizSlideInLeft {
+  from { transform: translateX(-48px); opacity: 0; }
+  to   { transform: translateX(0);     opacity: 1; }
+}
+.quiz-slide-forward {
+  animation: quizSlideInRight 0.28s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.quiz-slide-back {
+  animation: quizSlideInLeft 0.28s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
 /* Smooth scrollbar */
 * {
   scrollbar-width: thin;

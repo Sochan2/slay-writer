@@ -97,8 +97,8 @@ export default function LandingPage() {
               className="text-5xl font-bold tracking-tight text-white sm:text-6xl lg:text-7xl"
               style={{ lineHeight: "1.1" }}
             >
-              Turn Your Story Into a{" "}
-              <span className="gradient-text">Viral LinkedIn Post</span>
+             Your experience. Your words. {" "}
+              <span className="gradient-text">LinkedIn posts that actually sound like you.</span>
             </motion.h1>
 
             {/* Subtext — fade in + slide up */}

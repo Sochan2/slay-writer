@@ -254,15 +254,34 @@ Return ONLY the raw JSON object.`;
 
     let parsed: { authorityPost: string; relatablePost: string; rantPost?: string };
 
+    // Escape literal newlines/tabs that appear inside JSON string values.
+    // The model occasionally returns unescaped control characters which break JSON.parse.
+    function sanitizeJson(text: string): string {
+      let out = "";
+      let inStr = false;
+      let esc = false;
+      for (let i = 0; i < text.length; i++) {
+        const c = text[i];
+        if (esc) { out += c; esc = false; continue; }
+        if (c === "\\" && inStr) { out += c; esc = true; continue; }
+        if (c === '"') { inStr = !inStr; out += c; continue; }
+        if (inStr && c === "\n") { out += "\\n"; continue; }
+        if (inStr && c === "\r") { out += "\\r"; continue; }
+        if (inStr && c === "\t") { out += "\\t"; continue; }
+        out += c;
+      }
+      return out;
+    }
+
     try {
-      parsed = JSON.parse(content.text);
+      parsed = JSON.parse(sanitizeJson(content.text));
     } catch {
       // Strip markdown code fences if model wrapped the JSON
       const match = content.text.match(/\{[\s\S]*\}/);
       if (!match) {
         throw new Error("Failed to parse AI response as JSON");
       }
-      parsed = JSON.parse(match[0]);
+      parsed = JSON.parse(sanitizeJson(match[0]));
     }
 
     if (
