@@ -39,6 +39,48 @@ body {
   animation: quizSlideInLeft 0.28s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
+/* ── Magic UI keyframes ───────────────────────────────────────────────────── */
+
+/* AuroraText */
+@keyframes aurora-shift {
+  0%, 100% { background-position: 0% 50%; }
+  50%       { background-position: 100% 50%; }
+}
+
+/* AnimatedGradientText / AnimatedShinyText gradient sweep */
+@keyframes gradient-shift {
+  0%   { background-position: 0% center; }
+  100% { background-position: 200% center; }
+}
+
+/* BorderBeam / ShineBorder — requires @property for conic rotation */
+@property --border-beam-angle {
+  syntax: "<angle>";
+  initial-value: 0deg;
+  inherits: false;
+}
+@property --shine-angle {
+  syntax: "<angle>";
+  initial-value: 0deg;
+  inherits: false;
+}
+@keyframes border-beam-spin {
+  to { --border-beam-angle: 360deg; --shine-angle: 360deg; }
+}
+
+/* Meteors */
+@keyframes meteor {
+  0%   { transform: rotate(215deg) translateX(0);      opacity: 1; }
+  70%  {                                                opacity: 1; }
+  100% { transform: rotate(215deg) translateX(-600px); opacity: 0; }
+}
+
+/* AnimatedShinyText sweep */
+@keyframes shiny-text {
+  0%   { background-position: -200% center; }
+  100% { background-position: 200% center; }
+}
+
 /* Smooth scrollbar */
 * {
   scrollbar-width: thin;

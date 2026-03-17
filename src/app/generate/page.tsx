@@ -1,8 +1,10 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Navbar } from "@/components/Navbar";
 import { PostCard } from "@/components/PostCard";
+import { createClient } from "@/lib/supabase/client";
+import { savePostLocally } from "@/lib/savedPosts";
 
 interface FormData {
   topic: string;
@@ -103,7 +105,18 @@ export default function GeneratePage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [upgradeRequired, setUpgradeRequired] = useState(false);
+  const [showSignupBanner, setShowSignupBanner] = useState(false);
   const resultsRef = useRef<HTMLDivElement>(null);
+
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [savedState, setSavedState] = useState({ authority: false, relatable: false });
+  const [toast, setToast] = useState<string | null>(null);
+
+  useEffect(() => {
+    createClient()
+      .auth.getUser()
+      .then(({ data: { user } }) => setIsLoggedIn(!!user));
+  }, []);
 
   // Mobile quiz state
   const [mobileStep, setMobileStep] = useState(0);
@@ -141,6 +154,7 @@ export default function GeneratePage() {
     setError(null);
     setResult(null);
     setUpgradeRequired(false);
+    setSavedState({ authority: false, relatable: false });
 
     try {
       const response = await fetch("/api/generate", {
@@ -160,6 +174,7 @@ export default function GeneratePage() {
       }
 
       setResult(data);
+      setShowSignupBanner(true);
 
       // Scroll to results after a short delay for state to settle
       setTimeout(() => {
@@ -172,6 +187,46 @@ export default function GeneratePage() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const showToast = (msg: string) => {
+    setToast(msg);
+    setTimeout(() => setToast(null), 2000);
+  };
+
+  const handleSave = async (type: "authority" | "relatable") => {
+    if (!result) return;
+
+    if (isLoggedIn) {
+      try {
+        const supabase = createClient();
+        const {
+          data: { user },
+        } = await supabase.auth.getUser();
+        if (user) {
+          await supabase.from("saved_posts").insert({
+            user_id: user.id,
+            topic: form.topic,
+            authority_post: result.authorityPost,
+            relatable_post: result.relatablePost,
+          });
+          window.dispatchEvent(new CustomEvent("slay-post-saved"));
+        }
+      } catch {
+        // silent fail
+      }
+    } else {
+      savePostLocally({
+        topic: form.topic,
+        authorityPost: result.authorityPost,
+        relatablePost: result.relatablePost,
+        type,
+      });
+      window.dispatchEvent(new CustomEvent("slay-post-saved"));
+    }
+
+    setSavedState((prev) => ({ ...prev, [type]: true }));
+    showToast("✓ Post saved!");
   };
 
   return (
@@ -670,12 +725,16 @@ export default function GeneratePage() {
                 subtitle="Expert, confident, authoritative tone"
                 content={result.authorityPost}
                 variant="authority"
+                onSave={() => handleSave("authority")}
+                isSaved={savedState.authority}
               />
               <PostCard
                 title="Relatable Post"
                 subtitle="Empathetic, human, vulnerable tone"
                 content={result.relatablePost}
                 variant="relatable"
+                onSave={() => handleSave("relatable")}
+                isSaved={savedState.relatable}
               />
             </div>
 
@@ -758,9 +817,38 @@ export default function GeneratePage() {
                 )}
               </div>
             )}
+
+            {/* Guest signup nudge — non-blocking, dismissible */}
+            {showSignupBanner && !result.isPro && (
+              <div className="mt-4 flex items-center justify-between gap-4 rounded-xl border border-amber-800/60 bg-amber-950/30 px-4 py-3 text-sm text-amber-300">
+                <span>
+                  💾 Want to save your posts and get unlimited generations?{" "}
+                  <a href="/signup" className="font-semibold text-amber-400 underline-offset-2 hover:underline">
+                    Create free account →
+                  </a>
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setShowSignupBanner(false)}
+                  className="shrink-0 text-amber-600 transition-colors hover:text-amber-400"
+                  aria-label="Dismiss"
+                >
+                  <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+                    <path d="M2 2l10 10M12 2L2 12" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/>
+                  </svg>
+                </button>
+              </div>
+            )}
           </div>
         )}
       </main>
+
+      {/* Toast */}
+      {toast && (
+        <div className="fixed bottom-6 left-1/2 z-50 -translate-x-1/2 rounded-lg border border-zinc-700 bg-zinc-800 px-4 py-2.5 text-sm font-medium text-white shadow-lg">
+          {toast}
+        </div>
+      )}
 
       {/* Footer strip */}
       <div className="mt-auto border-t border-zinc-800 py-4 text-center text-xs text-zinc-500">

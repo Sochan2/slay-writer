@@ -4,6 +4,9 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Navbar } from "@/components/Navbar";
+import { MagicCard } from "@/components/magicui/magic-card";
+import { ShineBorder } from "@/components/magicui/shine-border";
+import { BorderBeam } from "@/components/magicui/border-beam";
 
 function CheckIcon() {
   return (
@@ -74,7 +77,7 @@ export default function PricingPage() {
           <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 sm:items-start">
 
             {/* Free plan */}
-            <div className="rounded-2xl border border-zinc-800 bg-zinc-900 p-8">
+            <MagicCard className="rounded-2xl border border-zinc-800 bg-zinc-900 p-8">
               <div className="mb-6">
                 <p className="text-sm font-semibold uppercase tracking-widest text-zinc-500">
                   Free
@@ -108,73 +111,83 @@ export default function PricingPage() {
               >
                 Start for free
               </Link>
-            </div>
+            </MagicCard>
 
             {/* Pro plan */}
-            <div className="relative rounded-2xl border-2 border-amber-400 bg-zinc-900 p-8 shadow-2xl shadow-amber-400/10">
-              {/* Badge */}
-              <div className="absolute -top-3.5 left-1/2 -translate-x-1/2">
+            <ShineBorder
+              color={["#FBBF24", "#F59E0B", "#D97706"]}
+              duration={6}
+              borderWidth={2}
+              className="relative bg-zinc-900 shadow-2xl shadow-amber-400/10"
+            >
+              {/* BorderBeam animation */}
+              <BorderBeam duration={8} colorFrom="#FBBF24" colorTo="#F97316" />
+
+              {/* Most Popular badge */}
+              <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 z-20">
                 <span className="rounded-full bg-amber-400 px-4 py-1 text-xs font-bold text-black">
                   MOST POPULAR
                 </span>
               </div>
 
-              <div className="mb-6">
-                <p className="text-sm font-semibold uppercase tracking-widest text-amber-400">
-                  Pro
-                </p>
-                <div className="mt-3 flex items-end gap-1">
-                  <span className="text-5xl font-bold text-white">$9</span>
-                  <span className="mb-1.5 text-sm text-zinc-400">/month</span>
+              <div className="p-8">
+                <div className="mb-6">
+                  <p className="text-sm font-semibold uppercase tracking-widest text-amber-400">
+                    Pro
+                  </p>
+                  <div className="mt-3 flex items-end gap-1">
+                    <span className="text-5xl font-bold text-white">$9</span>
+                    <span className="mb-1.5 text-sm text-zinc-400">/month</span>
+                  </div>
+                  <p className="mt-3 text-sm text-zinc-400">
+                    7-day free trial · card required · cancel any time
+                  </p>
                 </div>
-                <p className="mt-3 text-sm text-zinc-400">
-                  7-day free trial · card required · cancel any time
+
+                <ul className="mb-8 space-y-3">
+                  {[
+                    "Unlimited post generations",
+                    "Both Authority & Relatable styles",
+                    "Copy-to-clipboard",
+                    "All optional fields (numbers, goal…)",
+                    "Priority support",
+                    "Early access to new features",
+                  ].map((feat) => (
+                    <li key={feat} className="flex items-start gap-2.5 text-sm text-zinc-300">
+                      <CheckIcon />
+                      {feat}
+                    </li>
+                  ))}
+                </ul>
+
+                {error && (
+                  <p className="mb-4 rounded-lg border border-red-800 bg-red-950/50 px-3 py-2 text-xs text-red-400">
+                    {error}
+                  </p>
+                )}
+
+                <button
+                  onClick={startTrial}
+                  disabled={loading}
+                  className="flex w-full items-center justify-center gap-2 rounded-xl bg-amber-400 py-3 text-sm font-bold text-black shadow-lg shadow-amber-400/25 transition-all hover:bg-amber-300 disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  {loading ? (
+                    <>
+                      <svg className="h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                      </svg>
+                      Redirecting to checkout…
+                    </>
+                  ) : (
+                    "Start Free Trial →"
+                  )}
+                </button>
+                <p className="mt-3 text-center text-xs text-zinc-500">
+                  $9/month after 7-day trial. Cancel any time.
                 </p>
               </div>
-
-              <ul className="mb-8 space-y-3">
-                {[
-                  "Unlimited post generations",
-                  "Both Authority & Relatable styles",
-                  "Copy-to-clipboard",
-                  "All optional fields (numbers, goal…)",
-                  "Priority support",
-                  "Early access to new features",
-                ].map((feat) => (
-                  <li key={feat} className="flex items-start gap-2.5 text-sm text-zinc-300">
-                    <CheckIcon />
-                    {feat}
-                  </li>
-                ))}
-              </ul>
-
-              {error && (
-                <p className="mb-4 rounded-lg border border-red-800 bg-red-950/50 px-3 py-2 text-xs text-red-400">
-                  {error}
-                </p>
-              )}
-
-              <button
-                onClick={startTrial}
-                disabled={loading}
-                className="flex w-full items-center justify-center gap-2 rounded-xl bg-amber-400 py-3 text-sm font-bold text-black shadow-lg shadow-amber-400/25 transition-all hover:bg-amber-300 disabled:cursor-not-allowed disabled:opacity-60"
-              >
-                {loading ? (
-                  <>
-                    <svg className="h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-                    </svg>
-                    Redirecting to checkout…
-                  </>
-                ) : (
-                  "Start Free Trial →"
-                )}
-              </button>
-              <p className="mt-3 text-center text-xs text-zinc-500">
-                $9/month after 7-day trial. Cancel any time.
-              </p>
-            </div>
+            </ShineBorder>
 
           </div>
 

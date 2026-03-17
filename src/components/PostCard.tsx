@@ -7,9 +7,11 @@ interface PostCardProps {
   subtitle: string;
   content: string;
   variant: "authority" | "relatable" | "rant";
+  onSave?: () => void;
+  isSaved?: boolean;
 }
 
-export function PostCard({ title, subtitle, content, variant }: PostCardProps) {
+export function PostCard({ title, subtitle, content, variant, onSave, isSaved }: PostCardProps) {
   const [copied, setCopied] = useState(false);
 
   const handleCopy = async () => {
@@ -116,30 +118,60 @@ export function PostCard({ title, subtitle, content, variant }: PostCardProps) {
         </pre>
       </div>
 
-      {/* Footer with word count + prominent copy button */}
+      {/* Footer with word count + save + copy */}
       <div className="border-t border-zinc-800 px-5 py-3 flex items-center justify-between gap-3">
         <p className="text-xs text-zinc-500">
           {content.trim().split(/\s+/).length} words · Ready to post on LinkedIn
         </p>
-        <button
-          onClick={handleCopy}
-          className={`flex shrink-0 items-center gap-1.5 rounded-lg px-4 py-1.5 text-xs font-semibold transition-all ${
-            copied
-              ? "bg-emerald-600 text-white"
-              : "bg-amber-400 text-black hover:bg-amber-500"
-          }`}
-        >
-          {copied ? (
-            <>
-              <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true">
-                <path d="M2 6l3 3 5-5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+        <div className="flex items-center gap-2">
+          {onSave !== undefined && (
+            <button
+              onClick={onSave}
+              disabled={isSaved}
+              aria-label={isSaved ? "Saved" : "Save post"}
+              className={`flex shrink-0 items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-medium transition-all ${
+                isSaved
+                  ? "border-amber-700 bg-amber-900/40 text-amber-400 cursor-default"
+                  : "border-zinc-700 bg-zinc-800 text-zinc-300 hover:border-amber-400 hover:text-amber-400"
+              }`}
+            >
+              <svg
+                width="12"
+                height="12"
+                viewBox="0 0 12 12"
+                fill={isSaved ? "currentColor" : "none"}
+                aria-hidden="true"
+              >
+                <path
+                  d="M2 2a1 1 0 011-1h6a1 1 0 011 1v9l-4-2-4 2V2z"
+                  stroke="currentColor"
+                  strokeWidth="1.2"
+                  strokeLinejoin="round"
+                />
               </svg>
-              ✓ Copied!
-            </>
-          ) : (
-            "Copy to clipboard"
+              {isSaved ? "Saved ✓" : "Save Post"}
+            </button>
           )}
-        </button>
+          <button
+            onClick={handleCopy}
+            className={`flex shrink-0 items-center gap-1.5 rounded-lg px-4 py-1.5 text-xs font-semibold transition-all ${
+              copied
+                ? "bg-emerald-600 text-white"
+                : "bg-amber-400 text-black hover:bg-amber-500"
+            }`}
+          >
+            {copied ? (
+              <>
+                <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true">
+                  <path d="M2 6l3 3 5-5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+                ✓ Copied!
+              </>
+            ) : (
+              "Copy to clipboard"
+            )}
+          </button>
+        </div>
       </div>
     </div>
   );

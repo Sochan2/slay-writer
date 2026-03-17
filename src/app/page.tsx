@@ -3,6 +3,11 @@
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { Navbar } from "@/components/Navbar";
+import { AuroraText } from "@/components/magicui/aurora-text";
+import { AnimatedGradientText } from "@/components/magicui/animated-gradient-text";
+import { Meteors } from "@/components/magicui/meteors";
+import { MagicCard } from "@/components/magicui/magic-card";
+import { NumberTicker } from "@/components/magicui/number-ticker";
 
 // ── Shared animation helpers ──────────────────────────────────────────────────
 const MotionLink = motion(Link);
@@ -78,30 +83,43 @@ export default function LandingPage() {
             <div className="absolute left-1/2 top-20 h-[300px] w-[500px] -translate-x-1/2 rounded-full bg-amber-500/4 blur-2xl" />
           </div>
 
+          {/* Meteors background */}
+          <div aria-hidden="true" className="pointer-events-none absolute inset-0 -z-10 overflow-hidden">
+            <Meteors number={12} />
+          </div>
+
           <div className="mx-auto max-w-4xl text-center">
 
-            {/* Badge — fade in + slide down */}
+            {/* Badge — AnimatedGradientText */}
             <motion.div
               initial={{ opacity: 0, y: -20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: DUR, ease: EASE, delay: 0 }}
-              className="mb-8 inline-flex items-center gap-2 rounded-full border border-amber-800/60 bg-amber-950/40 px-4 py-2 text-sm font-medium text-amber-400 backdrop-blur-sm"
+              className="mb-8 flex justify-center"
             >
-              <span aria-hidden="true" className="text-amber-300">✦</span>
-              AI-Powered LinkedIn Growth
+              <AnimatedGradientText>
+                <span aria-hidden="true" className="mr-2">✦</span>
+                AI-Powered LinkedIn Growth
+              </AnimatedGradientText>
             </motion.div>
 
-            {/* H1 — fade in + slide up */}
+            {/* H1 — AuroraText on second line */}
             <motion.h1
               {...heroVariant(0.2)}
               className="text-5xl font-bold tracking-tight text-white sm:text-6xl lg:text-7xl"
               style={{ lineHeight: "1.1" }}
             >
-             Your experience. Your words. {" "}
-              <span className="gradient-text">LinkedIn posts that actually sound like you.</span>
+              Turn Your Story Into a{" "}
+              <br className="hidden sm:block" />
+              <AuroraText
+                colors={["#FBBF24", "#F59E0B", "#FCD34D", "#F97316", "#FBBF24"]}
+                speed={4}
+              >
+                Viral LinkedIn Post
+              </AuroraText>
             </motion.h1>
 
-            {/* Subtext — fade in + slide up */}
+            {/* Subtext */}
             <motion.p
               {...heroVariant(0.4)}
               className="mx-auto mt-7 max-w-lg text-lg leading-relaxed text-zinc-400"
@@ -109,7 +127,7 @@ export default function LandingPage() {
               Stop staring at a blank page. Fill in 4 fields. Get 2 scroll-stopping posts in seconds.
             </motion.p>
 
-            {/* CTA — fade in + scale up */}
+            {/* CTA */}
             <motion.div
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
@@ -130,7 +148,7 @@ export default function LandingPage() {
               </p>
             </motion.div>
 
-            {/* Social proof pill — fade in */}
+            {/* Social proof pill — NumberTicker */}
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -150,7 +168,9 @@ export default function LandingPage() {
               </div>
               <p className="text-sm text-zinc-400">
                 Join{" "}
-                <span className="font-semibold text-white">40+</span>{" "}
+                <span className="font-semibold text-white">
+                  <NumberTicker value={500} duration={2200} />+
+                </span>{" "}
                 professionals already posting with SLAY
               </p>
             </motion.div>
@@ -193,7 +213,7 @@ export default function LandingPage() {
                   </svg>
                 </div>
 
-                <div className="w-full rounded-2xl bg-zinc-900 p-5 shadow-lg ring-2 ring-amber-900/50">
+                <MagicCard className="w-full rounded-2xl bg-zinc-900 p-5 shadow-lg ring-2 ring-amber-900/50">
                   <div className="space-y-2.5">
                     {["Your topic", "Your experience", "Main message", "Target audience"].map((field) => (
                       <div key={field} className="flex items-center gap-2.5 rounded-xl border border-zinc-800 bg-zinc-800 px-3.5 py-2.5">
@@ -208,7 +228,7 @@ export default function LandingPage() {
                       Generate →
                     </div>
                   </div>
-                </div>
+                </MagicCard>
 
                 <div className="mt-6 text-center">
                   <h3 className="text-base font-bold text-white">Fill in four fields</h3>
@@ -224,7 +244,7 @@ export default function LandingPage() {
                 transition={{ duration: DUR, ease: EASE, delay: 0.15 }}
                 className="flex flex-col items-center lg:mt-12"
               >
-                <div className="w-full rounded-2xl bg-zinc-900 p-6 shadow-xl ring-2 ring-amber-800/50">
+                <MagicCard className="w-full rounded-2xl bg-zinc-900 p-6 shadow-xl ring-2 ring-amber-800/50">
                   <div className="flex justify-center mb-5">
                     <div className="flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-amber-400 to-amber-600 shadow-md">
                       <svg width="28" height="28" viewBox="0 0 28 28" fill="none" aria-hidden="true">
@@ -250,7 +270,7 @@ export default function LandingPage() {
                       </div>
                     ))}
                   </div>
-                </div>
+                </MagicCard>
 
                 <div className="mt-6 text-center">
                   <h3 className="text-base font-bold text-white">SLAY Framework applied</h3>
@@ -274,7 +294,7 @@ export default function LandingPage() {
                   </svg>
                 </div>
 
-                <div className="w-full rounded-2xl bg-zinc-900 p-5 shadow-lg ring-2 ring-amber-900/50">
+                <MagicCard className="w-full rounded-2xl bg-zinc-900 p-5 shadow-lg ring-2 ring-amber-900/50">
                   <div className="space-y-2.5">
                     <div className="flex items-start gap-2.5 rounded-xl border border-amber-900/50 bg-amber-900/20 px-3.5 py-2.5">
                       <span className="shrink-0 rounded-full bg-amber-900/50 px-2 py-0.5 text-xs font-semibold text-amber-400 ring-1 ring-amber-800">
@@ -293,7 +313,7 @@ export default function LandingPage() {
                       <span className="rounded-lg bg-amber-400 px-2.5 py-1 text-xs font-semibold text-black">Copy</span>
                     </div>
                   </div>
-                </div>
+                </MagicCard>
 
                 <div className="mt-6 text-center">
                   <h3 className="text-base font-bold text-white">Pick, copy, post</h3>
@@ -332,35 +352,36 @@ export default function LandingPage() {
                   key={i}
                   {...inViewFadeUp}
                   transition={{ duration: DUR, ease: EASE, delay: i * 0.1 }}
-                  className="flex flex-col gap-5 rounded-2xl border border-zinc-800 bg-zinc-900 p-7 transition-colors duration-200 hover:border-zinc-700 hover:bg-zinc-900/80"
                 >
-                  {/* Stars */}
-                  <div className="flex gap-1" aria-label="5 stars">
-                    {Array.from({ length: 5 }).map((_, s) => (
-                      <svg key={s} width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
-                        <path
-                          d="M7 1l1.545 3.13L12 4.635l-2.5 2.435.59 3.44L7 8.885l-3.09 1.625.59-3.44L2 4.635l3.455-.505L7 1z"
-                          fill="#FBBF24"
-                        />
-                      </svg>
-                    ))}
-                  </div>
-
-                  {/* Quote */}
-                  <p className="flex-1 text-sm leading-relaxed text-zinc-300">
-                    &ldquo;{t.quote}&rdquo;
-                  </p>
-
-                  {/* Attribution */}
-                  <div className="flex items-center gap-3 border-t border-zinc-800 pt-5">
-                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-amber-900/60 text-sm font-bold text-amber-300">
-                      {t.initial}
+                  <MagicCard className="flex h-full flex-col gap-5 rounded-2xl border border-zinc-800 bg-zinc-900 p-7 transition-colors duration-200 hover:border-zinc-700">
+                    {/* Stars */}
+                    <div className="flex gap-1" aria-label="5 stars">
+                      {Array.from({ length: 5 }).map((_, s) => (
+                        <svg key={s} width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+                          <path
+                            d="M7 1l1.545 3.13L12 4.635l-2.5 2.435.59 3.44L7 8.885l-3.09 1.625.59-3.44L2 4.635l3.455-.505L7 1z"
+                            fill="#FBBF24"
+                          />
+                        </svg>
+                      ))}
                     </div>
-                    <div>
-                      <p className="text-sm font-semibold text-white">{t.name}</p>
-                      <p className="text-xs text-zinc-500">{t.role}</p>
+
+                    {/* Quote */}
+                    <p className="flex-1 text-sm leading-relaxed text-zinc-300">
+                      &ldquo;{t.quote}&rdquo;
+                    </p>
+
+                    {/* Attribution */}
+                    <div className="flex items-center gap-3 border-t border-zinc-800 pt-5">
+                      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-amber-900/60 text-sm font-bold text-amber-300">
+                        {t.initial}
+                      </div>
+                      <div>
+                        <p className="text-sm font-semibold text-white">{t.name}</p>
+                        <p className="text-xs text-zinc-500">{t.role}</p>
+                      </div>
                     </div>
-                  </div>
+                  </MagicCard>
                 </motion.div>
               ))}
             </div>
