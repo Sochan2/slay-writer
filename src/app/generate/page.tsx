@@ -19,6 +19,8 @@ interface GenerateResult {
   relatablePost: string;
   rantPost?: string;
   isPro?: boolean;
+  remaining?: number;
+  limit?: number;
 }
 
 const MAX_LENGTH = 1000;
@@ -743,6 +745,19 @@ export default function GeneratePage() {
                 Not satisfied? Regenerate →
               </button>
             </div>
+
+            {/* Free tier remaining count */}
+            {!result.isPro && result.remaining !== undefined && (
+              <div className="mt-3 text-center text-xs text-amber-400">
+                {result.remaining === 0 ? (
+                  <a href="/pricing" className="hover:underline underline-offset-2">
+                    You&apos;ve used all free generations. Upgrade to Pro →
+                  </a>
+                ) : (
+                  <span>✦ {result.remaining} generation{result.remaining === 1 ? "" : "s"} remaining this month</span>
+                )}
+              </div>
+            )}
           </div>
         )}
       </main>

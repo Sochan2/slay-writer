@@ -2,43 +2,11 @@ import { NextRequest, NextResponse } from "next/server";
 import Anthropic from "@anthropic-ai/sdk";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { freeRateLimit } from "@/lib/ratelimit";
 
 const MAX_FIELD_LENGTH = 1000;
 const REQUIRED_FIELDS = ["topic", "experience", "message", "audience"] as const;
 const IS_DEV = process.env.NODE_ENV === "development";
-
-// ── In-memory rate limiter ───────────────────────────────────────────────────
-// Resets on server restart. Swap for Redis/KV when persistence is needed.
-const MONTHLY_LIMIT = 10;
-const WINDOW_MS = 30 * 24 * 60 * 60 * 1000; // 30 days
-const rateLimitStore = new Map<string, { count: number; resetAt: number }>();
-
-function getClientIp(request: NextRequest): string {
-  return (
-    request.headers.get("x-forwarded-for")?.split(",")[0].trim() ??
-    request.headers.get("x-real-ip") ??
-    "unknown"
-  );
-}
-
-function checkRateLimit(ip: string): { allowed: boolean; remaining: number } {
-  const now = Date.now();
-  const entry = rateLimitStore.get(ip);
-
-  if (!entry || now > entry.resetAt) {
-    rateLimitStore.set(ip, { count: 1, resetAt: now + WINDOW_MS });
-    return { allowed: true, remaining: MONTHLY_LIMIT - 1 };
-  }
-
-  if (entry.count >= MONTHLY_LIMIT) {
-    return { allowed: false, remaining: 0 };
-  }
-
-  entry.count += 1;
-  return { allowed: true, remaining: MONTHLY_LIMIT - entry.count };
-}
-
-// ────────────────────────────────────────────────────────────────────────────
 
 /**
  * Lazily creates an Anthropic client per request.
@@ -77,22 +45,28 @@ export async function POST(request: NextRequest) {
     isPro = false;
   }
 
-  if (!isPro) {
-    const ip = getClientIp(request);
-    const { allowed, remaining } = checkRateLimit(ip);
-    if (!allowed) {
+  let freeRemaining: number | undefined;
+
+  if (!isPro && freeRateLimit) {
+    const ip =
+      request.headers.get("x-forwarded-for") ??
+      request.headers.get("x-real-ip") ??
+      "anonymous";
+    const { success, limit, remaining, reset } = await freeRateLimit.limit(ip);
+    if (!success) {
       return NextResponse.json(
         {
           error:
             "You've used your 10 free generations this month. Upgrade to Pro for unlimited access.",
           upgradeRequired: true,
+          limit,
           remaining: 0,
+          reset: new Date(reset).toLocaleDateString(),
         },
         { status: 429 }
       );
     }
-    // Attach remaining count so the UI can show a counter
-    void remaining;
+    freeRemaining = remaining;
   }
   // ───────────────────────────────────────────────────────────────────────────
 
@@ -298,6 +272,8 @@ Return ONLY the raw JSON object.`;
       relatablePost: string;
       rantPost?: string;
       isPro: boolean;
+      remaining?: number;
+      limit?: number;
     } = {
       authorityPost: parsed.authorityPost.trim(),
       relatablePost: parsed.relatablePost.trim(),
@@ -306,6 +282,11 @@ Return ONLY the raw JSON object.`;
 
     if (isPro && typeof parsed.rantPost === "string" && parsed.rantPost.trim().length > 0) {
       responsePayload.rantPost = parsed.rantPost.trim();
+    }
+
+    if (!isPro && freeRemaining !== undefined) {
+      responsePayload.remaining = freeRemaining;
+      responsePayload.limit = 10;
     }
 
     return NextResponse.json(responsePayload);
