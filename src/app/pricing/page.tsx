@@ -147,6 +147,7 @@ export default function PricingPage() {
                 <ul className="mb-8 space-y-3">
                   {[
                     "Unlimited post generations",
+                    "Save your generated posts",
                     "Both Authority & Relatable styles",
                     "Copy-to-clipboard",
                     "All optional fields (numbers, goal…)",

@@ -34,14 +34,9 @@ export function Navbar() {
       }
       setIsLoggedIn(true);
 
-      const { data } = await supabase
-        .from("subscriptions")
-        .select("status")
-        .eq("user_id", user.id)
-        .in("status", ["active", "trialing"])
-        .single();
-
-      setHasActiveSub(!!data);
+      const res = await fetch("/api/subscription/status");
+      const { isPro } = await res.json();
+      setHasActiveSub(isPro);
 
       const { count } = await supabase
         .from("saved_posts")
@@ -78,7 +73,13 @@ export function Navbar() {
     try {
       const res = await fetch("/api/portal", { method: "POST" });
       const data = await res.json();
-      if (data.url) window.location.href = data.url;
+      if (data.url) {
+        window.location.href = data.url;
+      } else {
+        // No active subscription — refresh status and redirect to pricing
+        setHasActiveSub(false);
+        router.push("/pricing");
+      }
     } finally {
       setPortalLoading(false);
     }
@@ -228,15 +229,25 @@ export function Navbar() {
                 </svg>
               </button>
 
-              {/* Log in (desktop) */}
-              <Link
-                href="/login"
-                className="hidden md:inline-flex items-center rounded-lg border border-zinc-700 px-4 py-2 text-sm font-medium text-zinc-300 transition-colors hover:border-zinc-500 hover:text-white"
-              >
-                Log in
-              </Link>
+              {/* Log in / Logout (desktop) */}
+              {isLoggedIn ? (
+                <button
+                  type="button"
+                  onClick={handleLogout}
+                  className="hidden md:inline-flex items-center rounded-lg border border-zinc-700 px-4 py-2 text-sm font-medium text-zinc-300 transition-colors hover:border-zinc-500 hover:text-white"
+                >
+                  Logout
+                </button>
+              ) : (
+                <Link
+                  href="/login"
+                  className="hidden md:inline-flex items-center rounded-lg border border-zinc-700 px-4 py-2 text-sm font-medium text-zinc-300 transition-colors hover:border-zinc-500 hover:text-white"
+                >
+                  Log in
+                </Link>
+              )}
 
-              {/* Try Free CTA */}
+              {/* Try Free / Go to App CTA */}
               <MotionLink
                 href="/generate"
                 whileHover={{ scale: 1.05, boxShadow: "0 0 20px rgba(251, 191, 36, 0.4)" }}
@@ -244,7 +255,7 @@ export function Navbar() {
                 transition={{ type: "spring", stiffness: 400, damping: 17 }}
                 className="hidden md:inline-flex items-center gap-1 rounded-lg bg-amber-400 px-5 py-2.5 text-sm font-semibold text-black shadow-sm hover:bg-amber-500 transition-colors"
               >
-                Try Free <span aria-hidden="true">→</span>
+                {isLoggedIn ? "Open App" : "Try Free"} <span aria-hidden="true">→</span>
               </MotionLink>
             </>
           )}
@@ -285,19 +296,29 @@ export function Navbar() {
                 )}
               </Link>
               <div className="mt-3 flex flex-col gap-2 border-t border-zinc-800 pt-3">
-                <Link
-                  href="/login"
-                  onClick={() => setMobileOpen(false)}
-                  className="rounded-lg border border-zinc-700 px-4 py-2.5 text-center text-sm font-medium text-zinc-300 hover:border-zinc-500 hover:text-white transition-colors"
-                >
-                  Log in
-                </Link>
+                {isLoggedIn ? (
+                  <button
+                    type="button"
+                    onClick={() => { setMobileOpen(false); handleLogout(); }}
+                    className="rounded-lg border border-zinc-700 px-4 py-2.5 text-center text-sm font-medium text-zinc-300 hover:border-zinc-500 hover:text-white transition-colors"
+                  >
+                    Logout
+                  </button>
+                ) : (
+                  <Link
+                    href="/login"
+                    onClick={() => setMobileOpen(false)}
+                    className="rounded-lg border border-zinc-700 px-4 py-2.5 text-center text-sm font-medium text-zinc-300 hover:border-zinc-500 hover:text-white transition-colors"
+                  >
+                    Log in
+                  </Link>
+                )}
                 <Link
                   href="/generate"
                   onClick={() => setMobileOpen(false)}
                   className="rounded-lg bg-amber-400 px-4 py-2.5 text-center text-sm font-semibold text-black hover:bg-amber-500 transition-colors"
                 >
-                  Try Free →
+                  {isLoggedIn ? "Open App" : "Try Free"} →
                 </Link>
               </div>
             </div>
