@@ -25,6 +25,10 @@ export const metadata: Metadata = {
       "Generate high-performing LinkedIn posts using the SLAY Framework.",
     type: "website",
   },
+  twitter: {
+    card: "summary_large_image",
+    images: ["https://slay-writer.vercel.app/slay-writer-twitter-thumbnail.png"],
+  },
 };
 
 export default function RootLayout({
