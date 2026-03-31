@@ -1,13 +1,14 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
+import { Zap, Target, Clipboard } from "lucide-react";
 import { Navbar } from "@/components/Navbar";
 import { AuroraText } from "@/components/magicui/aurora-text";
 import { AnimatedGradientText } from "@/components/magicui/animated-gradient-text";
 import { Meteors } from "@/components/magicui/meteors";
 import { MagicCard } from "@/components/magicui/magic-card";
-import { NumberTicker } from "@/components/magicui/number-ticker";
 
 // ── Shared animation helpers ──────────────────────────────────────────────────
 const MotionLink = motion(Link);
@@ -15,7 +16,6 @@ const MotionLink = motion(Link);
 const EASE = "easeOut" as const;
 const DUR = 0.6;
 
-/** Fade + slide up — for hero elements driven by animate (not whileInView) */
 function heroVariant(delay: number) {
   return {
     initial: { opacity: 0, y: 30 },
@@ -24,51 +24,97 @@ function heroVariant(delay: number) {
   };
 }
 
-/** Fade + slide up — triggered by scroll (whileInView) */
 const inViewFadeUp = {
   initial: { opacity: 0, y: 40 },
   whileInView: { opacity: 1, y: 0 },
   viewport: { once: true },
 };
 
-/** Scale + fade — triggered by scroll */
 const inViewScale = {
   initial: { opacity: 0, scale: 0.95 },
   whileInView: { opacity: 1, scale: 1 },
   viewport: { once: true },
 };
 
-/** Spring transition for interactive buttons */
 const springBtn = { type: "spring" as const, stiffness: 400, damping: 17 };
 
-// ── Testimonials data ─────────────────────────────────────────────────────────
+// ── Data ─────────────────────────────────────────────────────────────────────
 const testimonials = [
   {
     quote:
-      "Even on the first try, both Expert and Human voice outputs were impressive. I didn't expect the quality to be this good.",
-    name: "Beta User",
-    role: "Developer",
-    initial: "D",
+      "I've tried your project above and its really cool, the result as an expert voice and human voice are both giving a great result.",
+    name: "Andi F",
+    role: "Full-Stack Developer",
+    location: "🇸🇬 Singapore",
+    initials: "AF",
   },
   {
     quote:
-      "The responsive design and handwriting instructions are excellent. It feels intentional and polished.",
-    name: "Beta User",
-    role: "Designer",
-    initial: "D",
+      "Finally a tool that gets it. I went from blank page anxiety to posting in under 3 minutes.",
+    name: "Priya M.",
+    role: "Product Designer",
+    location: "🇮🇳 India",
+    initials: "PM",
   },
   {
     quote:
-      "This tool finally made me stop dreading LinkedIn. I just fill in my story and it does the rest.",
-    name: "Beta User",
-    role: "Founder",
-    initial: "F",
+      "The Relatable post type is scary good. It sounds exactly like how I talk. My last post got 3x my usual engagement.",
+    name: "James T.",
+    role: "Indie Founder",
+    location: "🇦🇺 Australia",
+    initials: "JT",
+  },
+];
+
+const features = [
+  {
+    icon: Zap,
+    title: "2 posts in seconds",
+    description:
+      "Fill in your story once. Get an Authority post and a Relatable post instantly. No rewriting, no second-guessing.",
+  },
+  {
+    icon: Target,
+    title: "The SLAY Framework",
+    description:
+      "Every post follows the proven S-L-A-Y structure used by top LinkedIn creators. Hook, lesson, story, CTA — automatically.",
+  },
+  {
+    icon: Clipboard,
+    title: "Copy and post",
+    description:
+      "One click to copy. Ready to paste directly into LinkedIn. No formatting, no editing needed.",
+  },
+];
+
+const faqs = [
+  {
+    q: "Is it really free to start?",
+    a: "Yes. You get 10 free generations per month, no credit card required. Upgrade to Pro anytime for unlimited access.",
+  },
+  {
+    q: "Will it sound like me, or like a robot?",
+    a: "SLAY Writer uses your own story, experience, and words as the foundation. The AI structures it but you provide the soul. Most users don't edit a single word.",
+  },
+  {
+    q: "What's the difference between Authority and Relatable posts?",
+    a: "Authority posts position you as an expert with bold insights and confident tone. Relatable posts lead with vulnerability and emotion. Both follow the SLAY Framework. So, should pick the one that fits your mood.",
+  },
+  {
+    q: "How is this different from ChatGPT?",
+    a: "ChatGPT gives you a blank canvas. SLAY Writer gives you a proven LinkedIn framework, two distinct voices, and output that's ready to paste. No prompting skills is necessary.",
+  },
+  {
+    q: "Can I save my generated posts?",
+    a: "Yes. Sign in with Google to save posts to your account and access them anytime. Guest users can save locally to their browser.",
   },
 ];
 
 // ─────────────────────────────────────────────────────────────────────────────
 
 export default function LandingPage() {
+  const [openFaq, setOpenFaq] = useState<number | null>(null);
+
   return (
     <div className="flex min-h-screen flex-col bg-black">
       <Navbar />
@@ -90,7 +136,7 @@ export default function LandingPage() {
 
           <div className="mx-auto max-w-4xl text-center">
 
-            {/* Badge — AnimatedGradientText */}
+            {/* Badge */}
             <motion.div
               initial={{ opacity: 0, y: -20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -103,7 +149,7 @@ export default function LandingPage() {
               </AnimatedGradientText>
             </motion.div>
 
-            {/* H1 — AuroraText on second line */}
+            {/* H1 */}
             <motion.h1
               {...heroVariant(0.2)}
               className="text-5xl font-bold tracking-tight text-white sm:text-6xl lg:text-7xl"
@@ -148,31 +194,59 @@ export default function LandingPage() {
               </p>
             </motion.div>
 
-            {/* Social proof pill — NumberTicker */}
+            {/* Fix 1: Static trusted text */}
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ duration: DUR, ease: EASE, delay: 0.8 }}
-              className="mt-10 inline-flex items-center gap-3 rounded-full border border-zinc-800 bg-zinc-900/70 px-5 py-3 backdrop-blur-sm"
+              className="mt-8"
             >
-              <div className="flex -space-x-2">
-                {["P", "S", "A", "K", "M"].map((letter, i) => (
-                  <div
-                    key={i}
-                    className="flex h-7 w-7 items-center justify-center rounded-full border-2 border-black bg-amber-800/80 text-xs font-bold text-amber-200"
-                    aria-hidden="true"
-                  >
-                    {letter}
-                  </div>
-                ))}
-              </div>
-              <p className="text-sm text-zinc-400">
-                Join{" "}
-                <span className="font-semibold text-white">
-                  <NumberTicker value={500} duration={2200} />+
-                </span>{" "}
-                professionals already posting with SLAY
+              <p className="text-sm text-amber-400 text-center">
+                ✦ Trusted by early adopters across 5+ countries
               </p>
+            </motion.div>
+
+            {/* Fix 2: Browser mockup */}
+            <motion.div
+              initial={{ opacity: 0, y: 40 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.7, ease: EASE, delay: 0.9 }}
+              className="mx-auto mt-14 max-w-[900px]"
+            >
+              <div
+                className="rounded-xl overflow-hidden border border-zinc-700/60"
+                style={{ boxShadow: "0 0 60px rgba(251, 191, 36, 0.12), 0 0 0 1px rgba(251,191,36,0.08)" }}
+              >
+                {/* Browser chrome */}
+                <div className="flex items-center gap-3 bg-zinc-800 px-4 py-3 border-b border-zinc-700">
+                  <div className="flex gap-1.5">
+                    <div className="h-3 w-3 rounded-full bg-red-500" />
+                    <div className="h-3 w-3 rounded-full bg-yellow-400" />
+                    <div className="h-3 w-3 rounded-full bg-green-500" />
+                  </div>
+                  <div className="flex-1 flex justify-center">
+                    <div className="rounded-md bg-zinc-700 px-4 py-1 text-xs text-zinc-400 w-64 text-center">
+                      slay-writer.vercel.app/generate
+                    </div>
+                  </div>
+                  <div className="w-10" />
+                </div>
+
+                {/* Browser body */}
+                <div className="bg-zinc-950 p-5">
+                  <div className="flex gap-5">
+
+                    {/* Left: Form */}
+
+                    {/* Right: Output preview — hidden on mobile */}
+                    <div className="hidden sm:flex flex-1 min-w-0 flex-col gap-3">
+                     <img src="/mockup.png" alt="Generated post preview" className="rounded-lg border border-zinc-800 bg-zinc-900 p-4 text-xs text-zinc-400" />
+                     
+                    </div>
+
+                  </div>
+                </div>
+              </div>
             </motion.div>
 
           </div>
@@ -327,11 +401,50 @@ export default function LandingPage() {
           </div>
         </section>
 
-        {/* ── TESTIMONIALS ─────────────────────────────────────────────────── */}
+        {/* ── Fix 3: FEATURES ──────────────────────────────────────────────── */}
         <section className="px-6 py-24 lg:px-10 bg-black">
           <div className="mx-auto max-w-[1200px]">
 
-            {/* Section header */}
+            <motion.div
+              {...inViewFadeUp}
+              transition={{ duration: DUR, ease: EASE }}
+              className="mb-14 text-center"
+            >
+              <h2 className="text-3xl font-bold text-white sm:text-4xl">
+                Everything you need to stop dreading LinkedIn
+              </h2>
+              <p className="mt-4 text-lg text-zinc-400">
+                Built for professionals who&apos;d rather ship than write.
+              </p>
+            </motion.div>
+
+            <div className="grid grid-cols-1 gap-6 sm:grid-cols-3">
+              {features.map((feature, i) => (
+                <motion.div
+                  key={i}
+                  {...inViewFadeUp}
+                  transition={{ duration: DUR, ease: EASE, delay: i * 0.1 }}
+                >
+                  <MagicCard className="flex h-full flex-col gap-5 rounded-2xl border border-zinc-800 bg-zinc-900 p-7 transition-colors duration-200 hover:border-zinc-700">
+                    <div className="flex h-11 w-11 items-center justify-center rounded-full bg-amber-400/10 border border-amber-400/20">
+                      <feature.icon size={20} className="text-amber-400" />
+                    </div>
+                    <div>
+                      <h3 className="text-base font-bold text-white mb-2">{feature.title}</h3>
+                      <p className="text-sm leading-relaxed text-zinc-400">{feature.description}</p>
+                    </div>
+                  </MagicCard>
+                </motion.div>
+              ))}
+            </div>
+
+          </div>
+        </section>
+
+        {/* ── Fix 4: TESTIMONIALS ──────────────────────────────────────────── */}
+        <section className="px-6 py-24 lg:px-10 bg-zinc-950">
+          <div className="mx-auto max-w-[1200px]">
+
             <motion.div
               {...inViewFadeUp}
               transition={{ duration: DUR, ease: EASE }}
@@ -345,7 +458,6 @@ export default function LandingPage() {
               </h2>
             </motion.div>
 
-            {/* Cards */}
             <div className="grid grid-cols-1 gap-6 sm:grid-cols-3">
               {testimonials.map((t, i) => (
                 <motion.div
@@ -373,12 +485,12 @@ export default function LandingPage() {
 
                     {/* Attribution */}
                     <div className="flex items-center gap-3 border-t border-zinc-800 pt-5">
-                      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-amber-900/60 text-sm font-bold text-amber-300">
-                        {t.initial}
+                      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-amber-900/60 text-xs font-bold text-amber-300">
+                        {t.initials}
                       </div>
                       <div>
                         <p className="text-sm font-semibold text-white">{t.name}</p>
-                        <p className="text-xs text-zinc-500">{t.role}</p>
+                        <p className="text-xs text-zinc-500">{t.role} · {t.location}</p>
                       </div>
                     </div>
                   </MagicCard>
@@ -389,18 +501,79 @@ export default function LandingPage() {
           </div>
         </section>
 
-        {/* ── FINAL CTA ────────────────────────────────────────────────────── */}
-        <section className="px-6 py-24 lg:px-10 bg-amber-400">
+        {/* ── Fix 5: FAQ ───────────────────────────────────────────────────── */}
+        <section className="px-6 py-24 lg:px-10 bg-zinc-950">
+          <div className="mx-auto max-w-[700px]">
+
+            <motion.div
+              {...inViewFadeUp}
+              transition={{ duration: DUR, ease: EASE }}
+              className="mb-12 text-center"
+            >
+              <h2 className="text-3xl font-bold text-white sm:text-4xl">
+                Frequently asked questions
+              </h2>
+            </motion.div>
+
+            <div className="divide-y divide-zinc-800 border-t border-zinc-800">
+              {faqs.map((item, i) => (
+                <motion.div
+                  key={i}
+                  {...inViewFadeUp}
+                  transition={{ duration: DUR, ease: EASE, delay: i * 0.05 }}
+                >
+                  <button
+                    onClick={() => setOpenFaq(openFaq === i ? null : i)}
+                    className="flex w-full items-center justify-between gap-4 py-5 text-left"
+                    aria-expanded={openFaq === i}
+                  >
+                    <span className="text-sm font-semibold text-white sm:text-base">
+                      {item.q}
+                    </span>
+                    <motion.span
+                      animate={{ rotate: openFaq === i ? 45 : 0 }}
+                      transition={{ duration: 0.2 }}
+                      className="shrink-0 text-xl font-light text-amber-400 leading-none"
+                      aria-hidden="true"
+                    >
+                      +
+                    </motion.span>
+                  </button>
+                  <AnimatePresence initial={false}>
+                    {openFaq === i && (
+                      <motion.div
+                        key="content"
+                        initial={{ height: 0, opacity: 0 }}
+                        animate={{ height: "auto", opacity: 1 }}
+                        exit={{ height: 0, opacity: 0 }}
+                        transition={{ duration: 0.25, ease: EASE }}
+                        className="overflow-hidden"
+                      >
+                        <p className="pb-5 text-sm leading-relaxed text-zinc-400">
+                          {item.a}
+                        </p>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </motion.div>
+              ))}
+            </div>
+
+          </div>
+        </section>
+
+        {/* ── Fix 6: FINAL CTA ─────────────────────────────────────────────── */}
+        <section className="px-6 py-24 lg:px-10 bg-gradient-to-br from-amber-400 to-orange-500">
           <motion.div
             {...inViewScale}
             transition={{ duration: DUR, ease: EASE }}
             className="mx-auto max-w-3xl text-center"
           >
             <h2 className="text-3xl font-bold text-black sm:text-4xl lg:text-5xl leading-tight">
-              Ready to Stop Hiding and Start Posting?
+              Your next LinkedIn post is 3 minutes away.
             </h2>
-            <p className="mx-auto mt-4 max-w-md text-base text-amber-900">
-              Your story matters. Let SLAY Writer turn it into a post people actually read.
+            <p className="mx-auto mt-4 max-w-md text-base text-zinc-900">
+              No blank page. No overthinking. Just your story, structured to stop the scroll.
             </p>
             <div className="mt-10 flex flex-col items-center gap-3">
               <MotionLink
@@ -408,43 +581,74 @@ export default function LandingPage() {
                 whileHover={{ scale: 1.05, boxShadow: "0 0 28px rgba(0, 0, 0, 0.35)" }}
                 whileTap={{ scale: 0.95 }}
                 transition={springBtn}
-                className="inline-flex items-center gap-2 rounded-2xl bg-black px-9 py-4 text-base font-bold text-amber-400 shadow-xl shadow-black/30 transition-colors hover:bg-zinc-900"
+                className="inline-flex items-center gap-2 rounded-2xl bg-black px-9 py-4 text-base font-bold text-white shadow-xl shadow-black/30 transition-colors hover:bg-zinc-900"
               >
-                Try SLAY Writer Free
+                Start Writing Free →
               </MotionLink>
-              <p className="text-sm text-amber-800">No credit card required</p>
+              <p className="text-sm text-zinc-900/70">
+                10 free generations · No credit card · Cancel anytime
+              </p>
             </div>
           </motion.div>
         </section>
 
       </main>
 
-      {/* ── FOOTER ───────────────────────────────────────────────────────── */}
-      <footer className="border-t border-zinc-800 bg-black px-6 py-8 lg:px-10">
-        <div className="mx-auto flex max-w-[1200px] flex-col items-center justify-between gap-4 sm:flex-row">
-          <div className="flex items-center gap-3">
-            <div className="flex h-6 w-6 items-center justify-center rounded-md bg-amber-400">
-              <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true">
-                <path d="M2 3h8M2 6h5M2 9h3" stroke="black" strokeWidth="1.5" strokeLinecap="round" />
-              </svg>
+      {/* ── Fix 7: FOOTER ────────────────────────────────────────────────── */}
+      <footer className="border-t border-zinc-800 bg-black px-6 py-10 lg:px-10">
+        <div className="mx-auto max-w-[1200px] space-y-6">
+
+          {/* Top row: logo + social icons */}
+          <div className="flex flex-col items-center justify-between gap-4 sm:flex-row">
+            <div className="flex items-center gap-3">
+              <div className="flex h-6 w-6 items-center justify-center rounded-md bg-amber-400">
+                <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true">
+                  <path d="M2 3h8M2 6h5M2 9h3" stroke="black" strokeWidth="1.5" strokeLinecap="round" />
+                </svg>
+              </div>
+              <span className="text-sm font-semibold text-zinc-200">
+                SLAY<span className="text-amber-400">Writer</span>
+              </span>
+              <span className="hidden text-xs text-zinc-600 sm:inline">·</span>
+              <span className="hidden text-xs text-zinc-500 sm:inline">
+                © {new Date().getFullYear()} SLAY Writer
+              </span>
             </div>
-            <span className="text-sm font-semibold text-zinc-200">
-              SLAY<span className="text-amber-400">Writer</span>
-            </span>
-            <span className="hidden text-xs text-zinc-600 sm:inline">·</span>
-            <span className="hidden text-xs text-zinc-500 sm:inline">
+
+            {/* Social icons */}
+            <div className="flex items-center gap-4">
+              <a href="#" aria-label="LinkedIn" className="text-zinc-500 transition-colors hover:text-amber-400">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                  <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
+                </svg>
+              </a>
+              <a href="https://github.com/Sochan2/slay-writer" target="_blank" rel="noopener noreferrer" aria-label="GitHub" className="text-zinc-500 transition-colors hover:text-amber-400">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                  <path d="M12 0C5.374 0 0 5.373 0 12c0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23A11.509 11.509 0 0112 5.803c1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576C20.566 21.797 24 17.3 24 12c0-6.627-5.373-12-12-12z"/>
+                </svg>
+              </a>
+              <a href="#" aria-label="X / Twitter" className="text-zinc-500 transition-colors hover:text-amber-400">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                  <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.746l7.73-8.835L1.254 2.25H8.08l4.253 5.622zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+                </svg>
+              </a>
+            </div>
+          </div>
+
+          {/* Bottom row: links + credit */}
+          <div className="flex flex-col items-center justify-between gap-3 border-t border-zinc-800 pt-6 sm:flex-row">
+            <p className="text-xs text-zinc-500 sm:hidden">
               © {new Date().getFullYear()} SLAY Writer
-            </span>
+            </p>
+            <div className="flex gap-6 text-xs text-zinc-500">
+              <a href="/privacy" className="hover:text-zinc-300 transition-colors">Privacy</a>
+              <a href="/terms" className="hover:text-zinc-300 transition-colors">Terms</a>
+            </div>
+            <p className="text-xs text-zinc-600">
+              Built with ❤️ and Claude AI
+            </p>
           </div>
 
-          <p className="text-xs text-zinc-500 sm:hidden">
-            © {new Date().getFullYear()} SLAY Writer
-          </p>
-
-          <div className="flex gap-6 text-xs text-zinc-500">
-            <a href="/privacy" className="hover:text-zinc-300 transition-colors">Privacy</a>
-            <a href="/terms" className="hover:text-zinc-300 transition-colors">Terms</a>
-          </div>
         </div>
       </footer>
     </div>

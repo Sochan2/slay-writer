@@ -4,6 +4,8 @@ import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { freeRateLimit } from "@/lib/ratelimit";
 
+export const maxDuration = 60; // allow up to 60s for Claude to respond (Vercel Pro limit)
+
 const MAX_FIELD_LENGTH = 1000;
 const REQUIRED_FIELDS = ["topic", "experience", "message", "audience"] as const;
 const IS_DEV = process.env.NODE_ENV === "development";
@@ -52,21 +54,26 @@ export async function POST(request: NextRequest) {
       request.headers.get("x-forwarded-for") ??
       request.headers.get("x-real-ip") ??
       "anonymous";
-    const { success, limit, remaining, reset } = await freeRateLimit.limit(ip);
-    if (!success) {
-      return NextResponse.json(
-        {
-          error:
-            "You've used your 10 free generations this month. Upgrade to Pro for unlimited access.",
-          upgradeRequired: true,
-          limit,
-          remaining: 0,
-          reset: new Date(reset).toLocaleDateString(),
-        },
-        { status: 429 }
-      );
+    try {
+      const { success, limit, remaining, reset } = await freeRateLimit.limit(ip);
+      if (!success) {
+        return NextResponse.json(
+          {
+            error:
+              "You've used your 10 free generations this month. Upgrade to Pro for unlimited access.",
+            upgradeRequired: true,
+            limit,
+            remaining: 0,
+            reset: new Date(reset).toLocaleDateString(),
+          },
+          { status: 429 }
+        );
+      }
+      freeRemaining = remaining;
+    } catch {
+      // If Redis/Upstash is unavailable, allow the request through rather than blocking the user
+      console.error("[/api/generate] Rate limit check failed (Redis unavailable), allowing request");
     }
-    freeRemaining = remaining;
   }
   // ───────────────────────────────────────────────────────────────────────────
 
@@ -158,32 +165,138 @@ export async function POST(request: NextRequest) {
       ? `\n\nrantPost rules:\n- Raw, passionate, unapologetic hot-take\n- One strong controversial opinion stated with zero hedging\n- Confrontational but never aggressive — punchy, not mean\n- Maximum personality, zero corporate speak\n- Same SLAY structure but with completely unfiltered voice\n- Opens with a blunt "unpopular opinion" or "let's be honest" statement`
       : "";
 
-    const prompt = `You are an expert LinkedIn content strategist who writes viral posts using the SLAY Framework.
+    const prompt = `You are a ghostwriter who makes LinkedIn posts sound like a real human typed them at 11pm after a long day.
+You also know the SLAY Framework inside out and apply it to every post.
 
-SLAY Framework:
-- S = Strong Hook + Rehook (first 3 lines: line 1-2 = bold controversial statement or contrarian opinion that challenges a common belief; line 3 = a "rehook" sentence that makes the reader NEED to keep reading, e.g. "Here's what no one tells you." / "Most people get this completely wrong.")
-- L = Lesson or Insight (the key takeaway — clear and punchy)
-- A = Action or Story (back it up with a real example or specific moment)
-- Y = Your CTA (a specific question that invites comments — never generic)
+═══════════════════════════════════════
+SLAY FRAMEWORK
+═══════════════════════════════════════
+S = Strong Hook + Rehook
+  - Lines 1-2: bold, controversial, or contrarian statement that challenges a common belief
+  - Line 3: a "rehook" that makes the reader NEED to keep reading
+    e.g. "Here's what no one tells you." / "Most people get this completely wrong."
+L = Lesson or Insight (the key takeaway — clear and punchy)
+A = Action or Story (a real, specific moment or example — no vague generalities)
+Y = Your CTA (a personal, specific question that invites real replies — never generic)
 
-Writing rules (strictly enforce all):
+═══════════════════════════════════════
+ANTI-AI RULES — ENFORCE ALL STRICTLY
+═══════════════════════════════════════
+
+1. NO perfect parallel structure
+   ❌ "Every error became a lesson. Every conflict became growth."
+   ✅ "Errors wrecked me. But somehow I kept going."
+
+2. NO motivational poster endings
+   ❌ "That's exactly where growth lives."
+   ❌ "That separates juniors who stall from developers who scale."
+   ✅ "I still don't fully get it. But I'm less scared now."
+   ✅ "Anyway. That's my weird takeaway from 3 months of chaos."
+
+3. NO corporate metaphors
+   ❌ "ego kills velocity" / "navigate ambiguity" / "became a lesson in asking better questions"
+   ✅ Just say what happened in plain words
+
+4. ADD imperfect moments
+   - One sentence that trails off or feels unfinished
+   - One moment of genuine self-doubt or confusion
+   - One place where the author doesn't have the answer
+
+5. VARY sentence rhythm intentionally
+   - Mix very short (2-4 words) with medium sentences
+   - Occasionally start a sentence with "And." or "But."
+   - Add one line that stands alone for dramatic pause
+
+6. USE specific details over abstractions
+   ❌ "I struggled with collaboration"
+   ✅ "We had a 3-hour meeting and left with zero decisions"
+
+7. ENDING must feel real, not wrapped up
+   - Should NOT feel like a lesson-learned speech
+   - Should feel like the author is still figuring it out
+   - The CTA question must be specific and personal
+
+8. READING TEST: Before outputting, ask yourself:
+   "Could a tired 25-year-old have typed this on their phone?"
+   If no → rewrite it. Keep rewriting until yes.
+
+═══════════════════════════════════════
+HUMAN STYLE REFERENCE — LEARN FROM THESE
+═══════════════════════════════════════
+
+These are real LinkedIn posts. Learn their tone, rhythm, and imperfections.
+Your output must feel like it came from the same human world.
+
+Example 1 (casual, community, energy):
+"Whoop. whoop!
+Takeoff Tokyo 2026 has started and Global Incubator Network Austria is present here with a booth right at the entrance again!
+Are you a #scaleup looking to enter the European market?
+Then stop by and we tell you the benefit of the GO AUSTRIA program!"
+→ Learn: Short punchy opener. Real event details. Casual energy. Hashtags feel natural, not forced.
+
+Example 2 (long-form, reflective, honest):
+"Why hire people who are overseas?
+I've hired people from overseas a few times, back in the days before Zoom existed.
+I remember doing interviews online on Skype, lots of email exchanges, then helping new hires navigate things once they arrived in Japan.
+Dealing with the confusion of airport staff over work visas, helping find accommodation, lugging suitcases..."
+→ Learn: Opens with a real question. Specific details (Skype, not just "video calls"). Admits difficulty honestly. Doesn't wrap up perfectly. Ends still wondering, not with a lesson.
+
+Example 3 (curious, genuine, no answers):
+"Can someone explain the appeal of first class air travel?
+I'm genuinely curious… because from the outside, first class often looks like a very expensive version of a private room in a Japanese internet café.
+A big seat (or pod), some privacy, a screen, and the ability to sleep. All very nice things... but is that all there is?"
+→ Learn: Admits they don't know the answer. Uses specific local reference. "..." creates natural pause. Genuinely curious tone, not preachy.
+
+Example 4 (list format, direct, action-oriented):
+"Have you been doing the following?
+↳ Enrolling in courses but not finishing or applying them.
+↳ Following influencers on Twitter and LinkedIn, and trying to figure out where to start.
+↳ Collecting roadmaps but not following through.
+↳ Watching tutorials nonstop without building anything on your own."
+→ Learn: ↳ arrows for lists feel human. Calls out real behavior without being condescending. Bold claim that actually delivers.
+
+WHAT THESE EXAMPLES TEACH:
+1. Real posts have uneven rhythm — some sentences long, some brutally short
+2. Specific details beat vague inspiration every time
+3. Great posts end with genuine curiosity, not a bow-wrapped lesson
+4. ↳ arrows, "..." pauses, line breaks are human formatting tools
+5. Admitting you don't have the answer is MORE engaging than pretending you do
+6. Energy comes through in word choice — "Whoop. whoop!" beats "I'm excited to announce"
+
+═══════════════════════════════════════
+FORMATTING RULES
+═══════════════════════════════════════
 - Max 15 words per sentence
-- Blank line between each idea block
-- No corporate tone, no buzzwords, no fluff
-- First 2 lines must be magnetic — they show before "see more"
-- Conversational, direct, human voice
-- Preserve line breaks with \\n\\n between paragraphs and \\n for single line breaks within a block
-- Don't break into a new paragraph after every single sentence. Group 2-3 related sentences together before adding a line break. This creates natural reading rhythm, not robotic pacing. Only break when the topic genuinely shifts.
-- Opening hook MUST be controversial or challenge a widely-held belief — a genuine strong opinion, not clickbait
-- Line 3 MUST be a rehook: a short, punchy sentence that makes readers feel they'll miss something if they stop
-- CTA MUST be a specific, concrete question about the topic (e.g. "What's your biggest struggle with X? Tell me below 👇") — NEVER use generic CTAs like "Who else feels this?" or "Drop a 🔥 if you agree"
+- Preserve line breaks: use \\n\\n between paragraph blocks, \\n for single line breaks within a block
 
-User inputs:
+PARAGRAPH SPACING RULES:
+- Group 2-4 related sentences into one paragraph block
+- Only add a blank line when the topic, emotion, or scene changes
+- Think of it like chapters in a story — each paragraph = one idea
+- Short 1-sentence paragraphs are allowed for dramatic emphasis only (maximum 2 per post)
+
+GOOD spacing example:
+"School doesn't prepare you for your first real dev job. Not even close.\\n\\nI just finished 3 months as a frontend intern. Thought I was ready because I could build components and write clean React. Then they threw me into actual product work.\\n\\nNo one told me we'd spend half our time on marketing discussions. We sat in a room for 3 days trying to come up with an idea. No market research. Just us talking in circles.\\n\\nBut my boss didn't expect me to know everything. When we finally asked for help, they walked us through it. Showed us how to write code that actually ships.\\n\\nI'm still not great at marketing. But I learned more in 3 months of confusion than in a year of tutorials."
+
+BAD spacing (do NOT do this — too many line breaks):
+"School doesn't prepare you.\\n\\nNot even close.\\n\\nI just finished 3 months.\\n\\nThought I was ready."
+- First 2 lines must be magnetic — they show before "see more"
+- Opening hook MUST challenge a widely-held belief — a genuine strong opinion, not clickbait
+- Line 3 MUST be a rehook: short, punchy, makes readers feel they'll miss something if they stop
+- CTA MUST be a specific, concrete question (e.g. "What's your biggest struggle with X? Tell me below 👇")
+- NEVER use generic CTAs like "Who else feels this?" or "Drop a 🔥 if you agree"
+
+═══════════════════════════════════════
+USER INPUTS
+═══════════════════════════════════════
 - Topic: ${(topic as string).trim()}
 - Personal Experience: ${(experience as string).trim()}
 - Main Message: ${(message as string).trim()}
 - Target Audience: ${(audience as string).trim()}${optionalContext}
 
+═══════════════════════════════════════
+OUTPUT INSTRUCTIONS
+═══════════════════════════════════════
 Generate exactly ${postCount} LinkedIn posts and return ONLY this JSON (no markdown, no extra text):
 
 {
@@ -192,16 +305,18 @@ Generate exactly ${postCount} LinkedIn posts and return ONLY this JSON (no markd
 }
 
 authorityPost rules:
-- Expert, confident, authoritative tone
-- Position author as an industry leader
+- Confident, expert tone — but must still pass the human reading test
+- Position author as someone who learned from real experience, not a textbook
 - Lead with a bold insight or contrarian take
-- Data or framework-driven where possible
+- Can use data or frameworks, but ground them in a specific real moment
+- Apply ALL anti-AI rules and style reference learnings
 
 relatablePost rules:
 - Empathetic, human, vulnerable tone
 - Lead with a relatable struggle or honest emotion
-- Make the reader feel seen
-- Story-driven, warm, personal${rantRules}
+- Make the reader feel seen — use specific details, not vague feelings
+- Story-driven, warm, personal
+- Apply ALL anti-AI rules and style reference learnings${rantRules}
 
 All posts must:
 1. Follow SLAY Framework exactly
@@ -209,8 +324,9 @@ All posts must:
 3. Open with a bold, controversial or contrarian statement in lines 1-2
 4. Line 3 is a rehook — a short sentence that compels the reader past "see more"
 5. Use \\n\\n between paragraph blocks
-6. End with a specific question CTA that invites real replies (not a generic prompt)
-7. Be LinkedIn-ready — copy-paste quality
+6. End with a specific question CTA that invites real replies
+7. Pass the reading test: sounds like a real human, not a content tool
+8. Be LinkedIn-ready — copy-paste quality
 
 Return ONLY the raw JSON object.`;
 
@@ -250,12 +366,13 @@ Return ONLY the raw JSON object.`;
     try {
       parsed = JSON.parse(sanitizeJson(content.text));
     } catch {
-      // Strip markdown code fences if model wrapped the JSON
-      const match = content.text.match(/\{[\s\S]*\}/);
-      if (!match) {
+      // Strip markdown code fences and any trailing text after the closing brace
+      const match = content.text.match(/\{[\s\S]*?\}(?=\s*$|\s*```)/);
+      const fallback = match ?? content.text.match(/\{[\s\S]*\}/);
+      if (!fallback) {
         throw new Error("Failed to parse AI response as JSON");
       }
-      parsed = JSON.parse(sanitizeJson(match[0]));
+      parsed = JSON.parse(sanitizeJson(fallback[0]));
     }
 
     if (
