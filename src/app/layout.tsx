@@ -35,7 +35,7 @@ export const metadata: Metadata = {
     images: ["https://slay-writer.vercel.app/slay-writer-twitter-thumbnail.png"],
   },
   verification: {
-    google: "4asAj2rab3m6Ze69Oit0RN8lPYIx0HscDjhi0nNVmFo",
+    google: "qCMsFnFOMnPie7emQx5ixkry6EFFrS2r134wwTs8_r8",
   },
 };
 
