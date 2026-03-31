@@ -1,5 +1,11 @@
 "use client";
 
+declare global {
+  interface Window {
+    gtag: (...args: unknown[]) => void;
+  }
+}
+
 import { useState } from "react";
 
 interface PostCardProps {
@@ -15,6 +21,12 @@ export function PostCard({ title, subtitle, content, variant, onSave, isSaved }:
   const [copied, setCopied] = useState(false);
 
   const handleCopy = async () => {
+    if (typeof window !== "undefined" && window.gtag) {
+      window.gtag("event", "copy_post", {
+        event_category: "engagement",
+        event_label: "post_copied",
+      });
+    }
     try {
       await navigator.clipboard.writeText(content);
       setCopied(true);

@@ -1,5 +1,11 @@
 "use client";
 
+declare global {
+  interface Window {
+    gtag: (...args: unknown[]) => void;
+  }
+}
+
 import { useState, useRef, useEffect } from "react";
 import { Navbar } from "@/components/Navbar";
 import { PostCard } from "@/components/PostCard";
@@ -150,6 +156,13 @@ export default function GeneratePage() {
   const generatePosts = async () => {
     if (!isFormValid) return;
 
+    if (typeof window !== "undefined" && window.gtag) {
+      window.gtag("event", "generate_click", {
+        event_category: "engagement",
+        event_label: "generate_post",
+      });
+    }
+
     setLoading(true);
     setError(null);
     setResult(null);
@@ -176,6 +189,13 @@ export default function GeneratePage() {
       setResult(data);
       setShowSignupBanner(true);
 
+      if (typeof window !== "undefined" && window.gtag) {
+        window.gtag("event", "generation_success", {
+          event_category: "engagement",
+          event_label: "post_generated",
+        });
+      }
+
       // Scroll to results after a short delay for state to settle
       setTimeout(() => {
         resultsRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -196,6 +216,13 @@ export default function GeneratePage() {
 
   const handleSave = async (type: "authority" | "relatable") => {
     if (!result) return;
+
+    if (typeof window !== "undefined" && window.gtag) {
+      window.gtag("event", "save_post", {
+        event_category: "engagement",
+        event_label: "post_saved",
+      });
+    }
 
     if (isLoggedIn) {
       try {
